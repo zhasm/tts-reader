@@ -17,16 +17,21 @@ func runWithIndent(fn func(TTSRequest) (bool, error), req TTSRequest, depth int,
 }
 
 func main() {
+	lang, found := GetLang(Language)
+	if !found {
+		fmt.Println("Language not found:", Language)
+		return
+	}
 
 	req := NewTTSRequest(
-		"il prenait, ils prenaient",
-		"fr-FR",
-		"fr-FR-DeniseNeural",
+		Content,
+		lang.NameFUll,
+		lang.Reader,
 	)
 
-	ok, err := reqTTS(req)
-	if err != nil {
-		fmt.Println("TTS error:", err)
+	ok, ttsErr := reqTTS(req)
+	if ttsErr != nil {
+		fmt.Println("TTS error:", ttsErr)
 	}
 	if ok {
 		funcs := []func(TTSRequest) (bool, error){

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -12,13 +13,24 @@ var (
 	Language string
 	Speed    float64 = 0.8
 	Content  string
+	Help     bool
 )
 
+func PrintHelp(code int) {
+	flag.Usage()
+	os.Exit(code)
+}
+
 func ParseArgs() {
-	// Short flags
+	// Initialize supportedLangs first
+	for _, l := range Langs {
+		supportedLangs = append(supportedLangs, l.Name)
+	}
+	// Then register flags
 	flag.BoolVar(&Verbose, "v", false, "verbose mode")
-	flag.StringVar(&Language, "l", "fr", "language (fr, jp, pl)")
+	flag.StringVar(&Language, "l", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
 	flag.Float64Var(&Speed, "s", 0.8, "speed (float)")
+	flag.BoolVar(&Help, "h", false, "print help")
 
 	// Support long flags before flag.Parse()
 	args := os.Args[1:]
@@ -39,6 +51,8 @@ func ParseArgs() {
 					i++
 				}
 			}
+		case "--help":
+			PrintHelp(0)
 		default:
 			newArgs = append(newArgs, args[i])
 		}
@@ -56,13 +70,14 @@ func ParseArgs() {
 		fmt.Println("Invalid language. Choose from: fr, jp, pl")
 		os.Exit(1)
 	}
+
+	if Help {
+		PrintHelp(0)
+	}
+
 	if len(Content) == 0 {
-		fmt.Println("Usage: [options] <content>")
-		fmt.Println("Options:")
-		fmt.Println("  -v, --verbose           verbose mode")
-		fmt.Println("  -l, --language <lang>   language (fr, jp, pl)")
-		fmt.Println("  -s, --speed <float>     speed (default 0.8)")
-		os.Exit(1)
+		fmt.Println(GetFlag(), "Content arg missing~ \n")
+		PrintHelp(1)
 	}
 
 	// Print the parsed arguments

@@ -130,6 +130,11 @@ func reqTTS(req TTSRequest) (bool, error) {
 		return false, err
 	}
 
+	if resp.StatusCode != 200 {
+		fmt.Println("Requesting TTS Error!")
+		os.Exit(1)
+	}
+
 	// Display Results
 	VPrintf("=== Response Details ===\n")
 	VPrintf("Response Status: %s\n", resp.Status)

@@ -15,6 +15,7 @@ func init() {
 		VPrintln("Warning: TTS_API_KEY environment variable is not set")
 		VPrintln("Please set the TTS_API_KEY environment variable:")
 		VPrintln("export TTS_API_KEY=your_api_key_here")
+		os.Exit(1)
 	} else {
 		VPrintf("TTS_API_KEY loaded successfully (length: %d)\n", len(TTS_API_KEY))
 	}
@@ -24,6 +25,7 @@ func init() {
 		VPrintln("Warning: R2_DB_TOKEN environment variable is not set")
 		VPrintln("Please set the R2_DB_TOKEN environment variable:")
 		VPrintln("export R2_DB_TOKEN=your_token_here")
+		os.Exit(1)
 	} else {
 		VPrintf("R2_DB_TOKEN loaded successfully (length: %d)\n", len(R2_DB_TOKEN))
 	}

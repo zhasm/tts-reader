@@ -76,5 +76,9 @@ func AppendRecord(req TTSRequest) (bool, error) {
 	VPrintln("response Status : ", resp.Status)
 	VPrintln("response Headers : ", resp.Header)
 	VPrintln("response Body : ", string(respBody))
+	if resp.StatusCode != 200 {
+		fmt.Println("Appending record Error!")
+		os.Exit(1)
+	}
 	return true, nil
 }
