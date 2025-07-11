@@ -79,19 +79,18 @@ func reqTTS(req TTSRequest) (bool, error) {
 		Timeout: 30 * time.Second,
 	}
 
-	// Create request
-	httpReq, err := http.NewRequest("POST", "https://eastasia.tts.speech.microsoft.com/cognitiveservices/v1", body)
+	httpHeaders := map[string]string{
+		"X-Microsoft-Outputformat":  "riff-24khz-16bit-mono-pcm",
+		"Content-Type":              "application/ssml+xml",
+		"Host":                      "westus.tts.speech.microsoft.com",
+		"Ocp-Apim-Subscription-Key": TTS_API_KEY,
+		"User-Agent":                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36",
+	}
+	httpReq, err := newHTTPRequestWithRetry("POST", "https://eastasia.tts.speech.microsoft.com/cognitiveservices/v1", body, httpHeaders)
 	if err != nil {
 		VPrintf("Error creating request: %v\n", err)
 		return false, err
 	}
-
-	// Headers
-	httpReq.Header.Add("X-Microsoft-Outputformat", "riff-24khz-16bit-mono-pcm")
-	httpReq.Header.Add("Content-Type", "application/ssml+xml")
-	httpReq.Header.Add("Host", "westus.tts.speech.microsoft.com")
-	httpReq.Header.Add("Ocp-Apim-Subscription-Key", TTS_API_KEY)
-	httpReq.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36")
 
 	VPrintf("Request URL: %s\n", httpReq.URL.String())
 	VPrintf("Request Method: %s\n", httpReq.Method)

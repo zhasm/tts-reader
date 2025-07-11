@@ -50,8 +50,10 @@ func AppendRecord(req TTSRequest) (bool, error) {
 	// Create client
 	client := &http.Client{}
 
-	// Create request
-	httpReq, err := http.NewRequest("POST", "https://tts-server.rex-zhasm6886.workers.dev/api/item", body)
+	httpHeaders := map[string]string{
+		"Content-Type": "application/json",
+	}
+	httpReq, err := newHTTPRequestWithRetry("POST", "https://tts-server.rex-zhasm6886.workers.dev/api/item", body, httpHeaders)
 	if err != nil {
 		VPrintf("Error creating HTTP request: %v\n", err)
 		return false, err
