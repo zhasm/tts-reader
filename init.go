@@ -40,7 +40,7 @@ func init() {
 		VPrintln("Warning: R2_DB_TOKEN environment variable is not set")
 		VPrintln("Please set the R2_DB_TOKEN environment variable:")
 		VPrintln("export R2_DB_TOKEN=your_token_here")
-		os.Exit(1)
+		os.Exit(2)
 	} else {
 		VPrintf("R2_DB_TOKEN loaded successfully (length: %d)\n", len(R2_DB_TOKEN))
 	}

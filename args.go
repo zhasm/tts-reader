@@ -76,7 +76,7 @@ func ParseArgs() {
 	}
 
 	if len(Content) == 0 {
-		fmt.Println(GetFlag(), "Content arg missing~ ")
+		fmt.Println("Content arg missing~ ")
 		PrintHelp(1)
 	}
 

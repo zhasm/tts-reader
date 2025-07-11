@@ -31,17 +31,17 @@ func playAudio(req TTSRequest) (bool, error) {
 		return false, err
 	}
 
-	// Play audio with ffplay command
+	// Play audio with ffplay command in background
 	VPrintf("Playing audio: %s\n", file)
 	cmd := exec.Command("ffplay", "-hide_banner", "-loglevel", "panic", "-nodisp", "-autoexit", file)
 
-	// Run the command
-	if err := cmd.Run(); err != nil {
-		VPrintf("Error playing audio: %v\n", err)
+	// Start the command in background (non-blocking)
+	if err := cmd.Start(); err != nil {
+		VPrintf("Error starting audio playback: %v\n", err)
 		VPrintf("Make sure ffplay is installed and available in PATH\n")
 		return false, err
 	}
 
-	VPrintf("Audio playback completed\n")
+	VPrintf("Audio playback started in background\n")
 	return true, nil
 }

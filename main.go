@@ -4,19 +4,29 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 )
 
 func runWithIndent(fn func(TTSRequest) (bool, error), req TTSRequest, depth int, wg *sync.WaitGroup) {
-	defer wg.Done()
 	indent := strings.Repeat("  ", depth)
 	functionName := getFuncName(fn)
 	logger.Printf("%s%s begins", indent, functionName)
-	// If you want to run nested functions, call runWithIndent with depth+1
-	fn(req)
-	logger.Printf("%s%s ends", indent, functionName)
+	go func() {
+		defer wg.Done()
+		beginTime := time.Now()
+		result, err := fn(req)
+		timeCost := time.Since(beginTime)
+
+		if err != nil {
+			logger.Printf("%s%s ends with error: %v, took %.3f", indent, functionName, err, timeCost.Seconds())
+		} else {
+			logger.Printf("%s%s ends, success: %v, took %.3f", indent, functionName, result, timeCost.Seconds())
+		}
+	}()
 }
 
 func main() {
+
 	lang, found := GetLang(Language)
 	if !found {
 		fmt.Println("Language not found:", Language)
@@ -35,14 +45,14 @@ func main() {
 	}
 	if ok {
 		funcs := []func(TTSRequest) (bool, error){
-			playAudio,
 			uploadToR2,
 			AppendRecord,
+			playAudio,
 		}
 		var wg sync.WaitGroup
 		wg.Add(len(funcs))
 		for i, f := range funcs {
-			go runWithIndent(f, req, i, &wg)
+			runWithIndent(f, req, i, &wg)
 		}
 		wg.Wait()
 	}
