@@ -5,8 +5,12 @@ import (
 	"strings"
 )
 
+const (
+	TTS_SUB_PATH = "/icloud/0-tmp/tts"
+)
+
 var TTS_API_KEY string
-var TTS_PATH = os.Getenv("HOME") + "/icloud/0-tmp/tts"
+var TTS_PATH = os.Getenv("HOME") + TTS_SUB_PATH
 var R2_DB_TOKEN string
 
 // isTest returns true if the program is running under go test

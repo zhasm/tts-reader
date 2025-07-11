@@ -22,7 +22,7 @@ LDFLAGS=-ldflags "-X main.Version=$(shell git describe --tags --always --dirty 2
 .DEFAULT_GOAL := build
 
 # Build the application
-build:
+build: fmt lint
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) .
 	cp -f $(BINARY_NAME) ~/icloud/bin/
 

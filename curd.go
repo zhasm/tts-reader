@@ -9,8 +9,11 @@ import (
 	"os"
 )
 
+const (
+	CRUD_HOST = "https://tts-server.rex-zhasm6886.workers.dev/api/item"
+)
+
 func AppendRecord(req TTSRequest) (bool, error) {
-	// cURL (POST https://tts-server.rex-zhasm6886.workers.dev/api/item)
 
 	// Normalize language code
 	var lang string
@@ -53,7 +56,7 @@ func AppendRecord(req TTSRequest) (bool, error) {
 	httpHeaders := map[string]string{
 		"Content-Type": "application/json",
 	}
-	httpReq, err := newHTTPRequestWithRetry("POST", "https://tts-server.rex-zhasm6886.workers.dev/api/item", body, httpHeaders)
+	httpReq, err := newHTTPRequestWithRetry("POST", CRUD_HOST, body, httpHeaders)
 	if err != nil {
 		VPrintf("Error creating HTTP request: %v\n", err)
 		return false, err

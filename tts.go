@@ -20,6 +20,14 @@ type TTSRequest struct {
 	Md5     string
 }
 
+const (
+	USER_AGENT                 = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36"
+	X_MICROSOFT_OUTPUTFORMAT   = "riff-24khz-16bit-mono-pcm"
+	HTTP_REQEUEST_HOST         = "westus.tts.speech.microsoft.com"
+	HTTP_REQEUEST_CONTENT_TYPE = "application/ssml+xml"
+	HTTP_REQEUEST_API          = "https://eastasia.tts.speech.microsoft.com/cognitiveservices/v1"
+)
+
 func NewTTSRequest(content, lang, reader string) TTSRequest {
 	gender := "Male" // default gender
 	speed := 0.8     // default speed
@@ -80,13 +88,13 @@ func reqTTS(req TTSRequest) (bool, error) {
 	}
 
 	httpHeaders := map[string]string{
-		"X-Microsoft-Outputformat":  "riff-24khz-16bit-mono-pcm",
-		"Content-Type":              "application/ssml+xml",
-		"Host":                      "westus.tts.speech.microsoft.com",
+		"X-Microsoft-Outputformat":  X_MICROSOFT_OUTPUTFORMAT,
+		"Content-Type":              HTTP_REQEUEST_CONTENT_TYPE,
+		"Host":                      HTTP_REQEUEST_HOST,
 		"Ocp-Apim-Subscription-Key": TTS_API_KEY,
-		"User-Agent":                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36",
+		"User-Agent":                USER_AGENT,
 	}
-	httpReq, err := newHTTPRequestWithRetry("POST", "https://eastasia.tts.speech.microsoft.com/cognitiveservices/v1", body, httpHeaders)
+	httpReq, err := newHTTPRequestWithRetry("POST", HTTP_REQEUEST_API, body, httpHeaders)
 	if err != nil {
 		VPrintf("Error creating request: %v\n", err)
 		return false, err

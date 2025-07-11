@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+const (
+	R2_URL_PREFIX = "https://pub-c6b11003307646e98afc7540d5f09c41.r2.dev"
+)
+
 func uploadToR2(req TTSRequest) (bool, error) {
 	// Check if file exists and is not empty
 	filename := req.Dest
@@ -39,7 +43,7 @@ func uploadToR2(req TTSRequest) (bool, error) {
 	VPrintf("Successfully uploaded %s to R2\n", filename)
 
 	//	copy mp3 url to clipboard
-	url := fmt.Sprintf("https://pub-c6b11003307646e98afc7540d5f09c41.r2.dev/%s.mp3", req.Md5)
+	url := fmt.Sprintf("%s/%s.mp3", R2_URL_PREFIX, req.Md5)
 	cmd = exec.Command("pbcopy")
 	cmd.Stdin = strings.NewReader(url)
 	if err := cmd.Run(); err != nil {
