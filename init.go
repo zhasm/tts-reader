@@ -2,14 +2,29 @@ package main
 
 import (
 	"os"
+	"strings"
 )
 
 var TTS_API_KEY string
 var TTS_PATH = os.Getenv("HOME") + "/icloud/0-tmp/tts"
 var R2_DB_TOKEN string
 
+// isTest returns true if the program is running under go test
+func isTest() bool {
+	// Check if any of the test flags are present
+	for _, arg := range os.Args {
+		if strings.HasPrefix(arg, "-test.") {
+			return true
+		}
+	}
+	return false
+}
+
 func init() {
-	ParseArgs()
+	// Only parse args if not running tests
+	if !isTest() {
+		ParseArgs()
+	}
 	TTS_API_KEY = os.Getenv("TTS_API_KEY")
 	if TTS_API_KEY == "" {
 		VPrintln("Warning: TTS_API_KEY environment variable is not set")

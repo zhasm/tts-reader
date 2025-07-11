@@ -63,39 +63,53 @@ func TestNewTTSRequest(t *testing.T) {
 		content string
 		lang    string
 		reader  string
-		want    TTSRequest
 	}{
 		{
 			name:    "French request",
 			content: "Bonjour le monde",
 			lang:    "fr-FR",
 			reader:  "fr-FR-DeniseNeural",
-			want: TTSRequest{
-				Content: "Bonjour le monde",
-				Lang:    "fr-FR",
-				Reader:  "fr-FR-DeniseNeural",
-				Speed:   0.8,
-			},
 		},
 		{
 			name:    "English request",
 			content: "Hello world",
 			lang:    "en-US",
 			reader:  "en-US-JennyNeural",
-			want: TTSRequest{
-				Content: "Hello world",
-				Lang:    "en-US",
-				Reader:  "en-US-JennyNeural",
-				Speed:   0.8,
-			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := NewTTSRequest(tt.content, tt.lang, tt.reader)
-			if got != tt.want {
-				t.Errorf("NewTTSRequest() = %v, want %v", got, tt.want)
+
+			// Test basic fields
+			if got.Content != tt.content {
+				t.Errorf("Content = %v, want %v", got.Content, tt.content)
+			}
+			if got.Lang != tt.lang {
+				t.Errorf("Lang = %v, want %v", got.Lang, tt.lang)
+			}
+			if got.Reader != tt.reader {
+				t.Errorf("Reader = %v, want %v", got.Reader, tt.reader)
+			}
+			if got.Speed != 0.8 {
+				t.Errorf("Speed = %v, want 0.8", got.Speed)
+			}
+			if got.Gender != "Male" {
+				t.Errorf("Gender = %v, want Male", got.Gender)
+			}
+
+			// Test that Dest and Md5 are set (non-empty)
+			if got.Dest == "" {
+				t.Error("Dest should not be empty")
+			}
+			if got.Md5 == "" {
+				t.Error("Md5 should not be empty")
+			}
+
+			// Test that Dest contains the expected path structure
+			if !strings.Contains(got.Dest, ".mp3") {
+				t.Errorf("Dest should contain .mp3 extension, got %v", got.Dest)
 			}
 		})
 	}
