@@ -43,7 +43,13 @@ func main() {
 		fmt.Println("TTS error:", ttsErr)
 	}
 	if ok {
-		logger.Printf("📂: %s", req.Dest)
+		logger.Println("")
+		content := req.Content
+		if len(content) > 64 {
+			content = content[:64] + "..."
+		}
+		logger.Printf("%s: [%s]", GetFlag(), content)
+		logger.Printf("📂: %s", toHomeRelativePath(req.Dest))
 		funcs := []func(TTSRequest) (bool, error){
 			uploadToR2,
 			AppendRecord,
