@@ -45,6 +45,9 @@ build-windows:
 build-darwin:
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(BINARY_DARWIN) .
 
+pub: build
+	cp -f $(BINARY_NAME) ~/icloud/bin/
+
 # Run the application
 run:
 	$(GOCMD) run .

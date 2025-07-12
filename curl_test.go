@@ -49,7 +49,9 @@ func setupMockServer(t *testing.T) (*httptest.Server, func()) {
 
 		// Return mock response
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("mock audio data"))
+		if _, err := w.Write([]byte("mock audio data")); err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
 	}))
 
 	return server, func() {
