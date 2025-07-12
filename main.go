@@ -43,7 +43,6 @@ func main() {
 		fmt.Println("TTS error:", ttsErr)
 	}
 	if ok {
-		logger.Println("")
 		content := req.Content
 		if len(content) > 64 {
 			content = content[:64] + "..."
@@ -61,5 +60,6 @@ func main() {
 			runWithIndent(f, req, i, &wg)
 		}
 		wg.Wait()
+		logger.Println("")
 	}
 }
