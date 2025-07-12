@@ -38,12 +38,12 @@ func main() {
 		lang.NameFUll,
 		lang.Reader,
 	)
-
 	ok, ttsErr := reqTTS(req)
 	if ttsErr != nil {
 		fmt.Println("TTS error:", ttsErr)
 	}
 	if ok {
+		logger.Printf("📂: %s", req.Dest)
 		funcs := []func(TTSRequest) (bool, error){
 			uploadToR2,
 			AppendRecord,

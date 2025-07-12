@@ -24,7 +24,6 @@ LDFLAGS=-ldflags "-X main.VersionInfo=$(shell git describe --tags --always --dir
 # Build the application
 build: fmt lint
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) .
-	cp -f $(BINARY_NAME) ~/icloud/bin/
 
 # Build for current platform with race detection
 build-race:
