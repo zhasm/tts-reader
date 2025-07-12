@@ -9,16 +9,26 @@ import (
 )
 
 var (
-	Verbose  bool
-	Language string
-	Speed    float64 = 0.8
-	Content  string
-	Help     bool
+	Verbose     bool
+	Language    string
+	Speed       float64 = 0.8
+	Content     string
+	Help        bool
+	Version     bool
+	VersionInfo string
 )
 
 func PrintHelp(code int) {
 	flag.Usage()
 	os.Exit(code)
+}
+
+func PrintVersion() {
+	if VersionInfo == "" {
+		VersionInfo = "unknown"
+	}
+	fmt.Printf("tts-reader version %s\n", VersionInfo)
+	os.Exit(0)
 }
 
 func ParseArgs() {
@@ -31,6 +41,7 @@ func ParseArgs() {
 	flag.StringVar(&Language, "l", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
 	flag.Float64Var(&Speed, "s", 0.8, "speed (float)")
 	flag.BoolVar(&Help, "h", false, "print help")
+	flag.BoolVar(&Version, "V", false, "show version info")
 
 	// Support long flags before flag.Parse()
 	args := os.Args[1:]
@@ -53,6 +64,8 @@ func ParseArgs() {
 			}
 		case "--help":
 			PrintHelp(0)
+		case "--version":
+			PrintVersion()
 		default:
 			newArgs = append(newArgs, args[i])
 		}
@@ -73,6 +86,10 @@ func ParseArgs() {
 
 	if Help {
 		PrintHelp(0)
+	}
+
+	if Version {
+		PrintVersion()
 	}
 
 	if len(Content) == 0 {
