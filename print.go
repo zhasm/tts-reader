@@ -29,19 +29,8 @@ func (cl *customLogger) Write(p []byte) (n int, err error) {
 }
 
 func init() {
-	// Create log file
-	logFile, err := os.OpenFile("/tmp/read.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		// If we can't open the log file, just use stderr
-		logger = log.New(os.Stderr, "", log.LstdFlags|log.Lmicroseconds)
-		return
-	}
-
-	// Create multi-writer to write to both stderr and log file
-	multiWriter := io.MultiWriter(os.Stderr, logFile)
-
 	// Create custom logger with 3-digit microsecond precision
-	customWriter := &customLogger{writer: multiWriter}
+	customWriter := &customLogger{writer: os.Stderr}
 	logger = log.New(customWriter, "", 0) // No flags since we handle timestamp ourselves
 }
 
