@@ -11,6 +11,7 @@ type Lang struct {
 }
 
 // Define the supported languages
+// TODO load from config file
 var Langs = []Lang{
 	{
 		Name:     "fr",
@@ -32,6 +33,13 @@ var Langs = []Lang{
 		Reader:   "ja-JP-MayuNeural",
 		Gender:   "Female",
 		Flag:     "🇯🇵",
+	},
+	{
+		Name:     "en",
+		NameFUll: "en-US",
+		Reader:   "en-GB-HollieNeural",
+		Gender:   "Female",
+		Flag:     "🇺🇸",
 	},
 }
 
