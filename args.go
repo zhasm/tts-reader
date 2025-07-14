@@ -138,7 +138,7 @@ func ParseArgs() {
 
 	// Validate language
 	if !IsSupportedLang(Language) {
-		fmt.Println("Invalid language. Choose from: fr, jp, pl")
+		fmt.Printf("Invalid language. Choose from: [%s]. \n", GetAllLangShortNamesStr())
 		os.Exit(1)
 	}
 

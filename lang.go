@@ -1,5 +1,10 @@
 package main
 
+import (
+	"slices"
+	"strings"
+)
+
 var supportedLangs []string
 
 type Lang struct {
@@ -70,4 +75,18 @@ func GetFlag() string {
 		}
 	}
 	return ""
+}
+
+func GetAllLangShortNames() []string {
+	langNames := make([]string, len(Langs))
+	for i, l := range Langs {
+		langNames[i] = l.Name
+	}
+	return langNames
+}
+
+func GetAllLangShortNamesStr() string {
+	names := GetAllLangShortNames()
+	slices.Sort(names)
+	return strings.Join(names, ", ")
 }
