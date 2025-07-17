@@ -10,7 +10,7 @@ import (
 func runWithIndent(fn func(TTSRequest) (bool, error), req TTSRequest, depth int, wg *sync.WaitGroup) {
 	indent := strings.Repeat("  ", depth)
 	functionName := getFuncName(fn)
-	logger.Printf("%s%s begins", indent, functionName)
+	LogInfo("%s%s begins", indent, functionName)
 	go func() {
 		defer wg.Done()
 		beginTime := time.Now()
@@ -18,9 +18,9 @@ func runWithIndent(fn func(TTSRequest) (bool, error), req TTSRequest, depth int,
 		timeCost := time.Since(beginTime)
 
 		if err != nil {
-			logger.Printf("%s%s ends with error: %v, took %.3f", indent, functionName, err, timeCost.Seconds())
+			LogInfo("%s%s ends with error: %v, took %.3f", indent, functionName, err, timeCost.Seconds())
 		} else {
-			logger.Printf("%s%s ends, success: %v, took %.3f", indent, functionName, result, timeCost.Seconds())
+			LogInfo("%s%s ends, success: %v, took %.3f", indent, functionName, result, timeCost.Seconds())
 		}
 	}()
 }
@@ -47,12 +47,13 @@ func main() {
 		if len(content) > 64 {
 			content = content[:64] + "..."
 		}
-		logger.Printf("%s: [%s]", GetFlag(), content)
-		logger.Printf("📂: %s", toHomeRelativePath(req.Dest))
+		LogInfo("%s: [%s]", GetFlag(), content)
+		LogInfo("📂: %s", toHomeRelativePath(req.Dest))
 		funcs := []func(TTSRequest) (bool, error){
-			uploadToR2,
-			AppendRecord,
 			playAudio,
+		}
+		if !DryRun {
+			funcs = append(funcs, uploadToR2, AppendRecord)
 		}
 		var wg sync.WaitGroup
 		wg.Add(len(funcs))
@@ -60,6 +61,6 @@ func main() {
 			runWithIndent(f, req, i, &wg)
 		}
 		wg.Wait()
-		logger.Println("")
+		LogInfo("")
 	}
 }

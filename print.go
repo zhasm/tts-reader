@@ -5,11 +5,13 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 	"time"
 )
 
 var (
-	logger *log.Logger
+	logger     *log.Logger
+	loggerOnce sync.Once
 )
 
 // Custom logger that writes with 3-digit microsecond precision
@@ -28,25 +30,32 @@ func (cl *customLogger) Write(p []byte) (n int, err error) {
 	return cl.writer.Write([]byte(formatted))
 }
 
-func init() {
-	// Create custom logger with 3-digit microsecond precision
-	customWriter := &customLogger{writer: os.Stderr}
-	logger = log.New(customWriter, "", 0) // No flags since we handle timestamp ourselves
+func getLogger() *log.Logger {
+	loggerOnce.Do(func() {
+		customWriter := &customLogger{writer: os.Stderr}
+		logger = log.New(customWriter, "", 0) // No flags since we handle timestamp ourselves
+	})
+	return logger
 }
 
 // Only prints when Verbose is true
 func VPrintln(a ...interface{}) {
 	if Verbose {
-		logger.Println(a...)
+		getLogger().Println(a...)
 	}
 }
 func VPrintf(format string, a ...interface{}) {
 	if Verbose {
-		logger.Printf(format, a...)
+		getLogger().Printf(format, a...)
 	}
 }
 func VPrint(a ...interface{}) {
 	if Verbose {
-		logger.Print(a...)
+		getLogger().Print(a...)
 	}
+}
+
+// Always-on info log (use for important info, not just verbose)
+func LogInfo(format string, a ...interface{}) {
+	getLogger().Printf(format, a...)
 }
