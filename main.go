@@ -61,6 +61,6 @@ func main() {
 			runWithIndent(f, req, i, &wg)
 		}
 		wg.Wait()
-		LogInfo("")
+		LogInfo("✅ %s [%s]\n", GetFlag(), content)
 	}
 }
