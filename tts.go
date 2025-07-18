@@ -94,7 +94,7 @@ func reqTTS(req TTSRequest) (bool, error) {
 		"Ocp-Apim-Subscription-Key": TTS_API_KEY,
 		"User-Agent":                USER_AGENT,
 	}
-	httpReq, err := newHTTPRequestWithRetry("POST", HTTP_REQEUEST_API, body, httpHeaders)
+	httpReq, err := newHTTPRequest("POST", HTTP_REQEUEST_API, body, httpHeaders)
 	if err != nil {
 		VPrintf("Error creating request: %v\n", err)
 		return false, err
@@ -115,11 +115,24 @@ func reqTTS(req TTSRequest) (bool, error) {
 
 	// Fetch Request
 	VPrintf("Sending request...\n")
-	resp, err := client.Do(httpReq)
+	var resp *http.Response
+	var doErr error
+	maxRetries := 10
+	initialInterval := 1000 * time.Millisecond
 
+	err = RetryWithBackoff(
+		func() error {
+			resp, doErr = client.Do(httpReq)
+			if doErr != nil {
+				LogInfo("HTTP request failed: %v\n", doErr)
+			}
+			return doErr
+		},
+		maxRetries,
+		initialInterval,
+	)
 	if err != nil {
-		VPrintf("HTTP request failed: %v\n", err)
-		return false, err
+		return false, doErr
 	}
 
 	// Check if response is nil

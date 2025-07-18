@@ -2,37 +2,43 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 )
 
+// Add a retry wrapper function
+type retryableFunc func(TTSRequest) (bool, error)
+
+func withRetry(fn retryableFunc, name, indent string, maxRetries int) retryableFunc {
+	return func(req TTSRequest) (bool, error) {
+		var err error
+		var ok bool
+		for retryIndex := 0; retryIndex < maxRetries; retryIndex++ {
+			LogInfo("%s%s begins", indent, name)
+			beginTime := time.Now()
+			ok, err = fn(req)
+			timeCost := time.Since(beginTime)
+			if err == nil {
+				LogInfo("%s%s [%d]succeeded, took %.3f(s)", indent, name, retryIndex, timeCost.Seconds())
+				return ok, nil
+			}
+			LogInfo("%s%s [%d]failed: %v, took %.3f(s), will retry", indent, name, retryIndex, err, timeCost.Seconds())
+		}
+		return ok, err
+	}
+}
+
 func runWithIndent(fn func(TTSRequest) (bool, error), req TTSRequest, depth int, wg *sync.WaitGroup) {
-	indent := strings.Repeat("  ", depth)
 	functionName := getFuncName(fn)
-	LogInfo("%s%s begins", indent, functionName)
 	go func() {
 		defer wg.Done()
-		beginTime := time.Now()
-		err := RetryWithBackoff(
-			func() error {
-				result, err := fn(req)
-				if err != nil {
-					LogInfo("%s%s ends with error: %v, will retry", indent, functionName, err)
-					return err
-				}
-				LogInfo("%s%s ends, success: %v", indent, functionName, result)
-				return nil
-			},
-			5,             // N: max retries
-			2*time.Second, // M: initial interval
-		)
-		timeCost := time.Since(beginTime)
+		_, err := fn(req)
+
 		if err != nil {
-			LogInfo("%s%s failed after retries: %v, took %.3f", indent, functionName, err, timeCost.Seconds())
-		} else {
-			LogInfo("%s%s succeeded, took %.3f", indent, functionName, timeCost.Seconds())
+			LogInfo("%s ends with error: %v", functionName, err)
+			return
 		}
+		//		LogInfo("%s ends, success: %v", functionName, result)
 	}()
 }
 
@@ -76,15 +82,16 @@ func main() {
 		}
 		LogInfo("%s: [%s]", GetFlag(), content)
 		LogInfo("📂: %s", toHomeRelativePath(req.Dest))
+		maxRetries := 10
 		funcs := []func(TTSRequest) (bool, error){
-			uploadToR2,
-			AppendRecord,
-			playAudio,
+			withRetry(AppendRecord, "main.AppendRecord", "  ", maxRetries),
+			withRetry(playAudio, "main.playAudio", "    ", maxRetries),
+			withRetry(uploadToR2, "main.uploadToR2", "", maxRetries),
 		}
 		var wg sync.WaitGroup
 		wg.Add(len(funcs))
 		for i, f := range funcs {
-			runWithIndent(f, req, i, &wg)
+			runWithIndent(f, req, i, &wg) // Pass retryIndex (i)
 		}
 		wg.Wait()
 	}

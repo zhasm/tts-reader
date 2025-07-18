@@ -8,33 +8,36 @@ import (
 
 const MAX_RETRY = 10
 
-// newHTTPRequestWithRetry abstracts http.NewRequest with retry logic for request creation only.
-func newHTTPRequestWithRetry(method, url string, body io.Reader, headers map[string]string) (*http.Request, error) {
+// newHTTPRequest abstracts http.NewRequest with retry logic for request creation only.
+func newHTTPRequest(method, url string, body io.Reader, headers map[string]string) (*http.Request, error) {
 	var req *http.Request
-	var err error
-	delay := 200 * time.Millisecond
-	maxAttempts := MAX_RETRY
+	var lastErr error
+
 	curlCmd := buildCurlCommand(method, url, headers, body)
 	VPrintf("Curl: %s", curlCmd)
 
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
-		req, err = http.NewRequest(method, url, body)
-		if err == nil {
-			// Set headers if provided
-			for k, v := range headers {
-				req.Header.Set(k, v)
+	err := RetryWithBackoff(
+		func() error {
+			var err error
+			req, err = http.NewRequest(method, url, body)
+			if err == nil {
+				for k, v := range headers {
+					req.Header.Set(k, v)
+				}
+				VPrintf("HTTP request for %s OK.", url)
+			} else {
+				VPrintf("HTTP request for %s failed: %v", url, err)
 			}
-			VPrintf("HTTP request for %s OK. at %d th try. ", url, attempt)
-			return req, nil
-		}
-		if attempt < maxAttempts {
-			// Exponential backoff: delay doubles each time
-			VPrintf("HTTP request for %s failed. waiting for the %d th try. ", url, attempt)
-			time.Sleep(delay)
-			delay *= 2
-		}
+			lastErr = err
+			return err
+		},
+		MAX_RETRY,
+		200*time.Millisecond,
+	)
+	if err != nil {
+		return nil, lastErr
 	}
-	return nil, err
+	return req, nil
 }
 
 // buildCurlCommand constructs an equivalent curl command for debugging purposes
