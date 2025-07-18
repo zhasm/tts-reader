@@ -14,19 +14,46 @@ func runWithIndent(fn func(TTSRequest) (bool, error), req TTSRequest, depth int,
 	go func() {
 		defer wg.Done()
 		beginTime := time.Now()
-		result, err := fn(req)
+		err := RetryWithBackoff(
+			func() error {
+				result, err := fn(req)
+				if err != nil {
+					LogInfo("%s%s ends with error: %v, will retry", indent, functionName, err)
+					return err
+				}
+				LogInfo("%s%s ends, success: %v", indent, functionName, result)
+				return nil
+			},
+			5,             // N: max retries
+			2*time.Second, // M: initial interval
+		)
 		timeCost := time.Since(beginTime)
-
 		if err != nil {
-			LogInfo("%s%s ends with error: %v, took %.3f", indent, functionName, err, timeCost.Seconds())
+			LogInfo("%s%s failed after retries: %v, took %.3f", indent, functionName, err, timeCost.Seconds())
 		} else {
-			LogInfo("%s%s ends, success: %v, took %.3f", indent, functionName, result, timeCost.Seconds())
+			LogInfo("%s%s succeeded, took %.3f", indent, functionName, timeCost.Seconds())
 		}
 	}()
 }
 
-func main() {
+func RetryWithBackoff(fn func() error, maxRetries int, initialInterval time.Duration) error {
+	interval := initialInterval
+	var lastErr error
+	for i := 0; i < maxRetries; i++ {
+		err := fn()
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		if i < maxRetries-1 {
+			time.Sleep(interval)
+			interval *= 2
+		}
+	}
+	return lastErr
+}
 
+func main() {
 	lang, found := GetLang(Language)
 	if !found {
 		fmt.Println("Language not found:", Language)
@@ -50,10 +77,9 @@ func main() {
 		LogInfo("%s: [%s]", GetFlag(), content)
 		LogInfo("📂: %s", toHomeRelativePath(req.Dest))
 		funcs := []func(TTSRequest) (bool, error){
+			uploadToR2,
+			AppendRecord,
 			playAudio,
-		}
-		if !DryRun {
-			funcs = append(funcs, uploadToR2, AppendRecord)
 		}
 		var wg sync.WaitGroup
 		wg.Add(len(funcs))
@@ -61,6 +87,5 @@ func main() {
 			runWithIndent(f, req, i, &wg)
 		}
 		wg.Wait()
-		LogInfo("✅ %s [%s]\n", GetFlag(), content)
 	}
 }
