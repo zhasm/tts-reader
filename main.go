@@ -84,15 +84,19 @@ func main() {
 		LogInfo("📂: %s", toHomeRelativePath(req.Dest))
 		maxRetries := 10
 		funcs := []func(TTSRequest) (bool, error){
-			withRetry(AppendRecord, "main.AppendRecord", "  ", maxRetries),
 			withRetry(playAudio, "main.playAudio", "    ", maxRetries),
-			withRetry(uploadToR2, "main.uploadToR2", "", maxRetries),
 		}
+		if !DryRun {
+			funcs = append(funcs, withRetry(AppendRecord, "main.AppendRecord", "  ", maxRetries))
+			funcs = append(funcs, withRetry(uploadToR2, "main.uploadToR2", "", maxRetries))
+		}
+
 		var wg sync.WaitGroup
 		wg.Add(len(funcs))
 		for i, f := range funcs {
 			runWithIndent(f, req, i, &wg) // Pass retryIndex (i)
 		}
 		wg.Wait()
+		LogInfo("✅ %s: [%s]", GetFlag(), content)
 	}
 }
