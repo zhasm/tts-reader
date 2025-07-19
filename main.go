@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 )
@@ -65,38 +66,37 @@ func main() {
 		fmt.Println("Language not found:", Language)
 		return
 	}
-
 	req := NewTTSRequest(
 		Content,
 		lang.NameFUll,
 		lang.Reader,
 	)
+	content := req.Content
+	LogInfo("%s: [%s]", GetFlag(), content)
 	ok, ttsErr := reqTTS(req)
-	if ttsErr != nil {
+	if ttsErr != nil || !ok {
 		fmt.Println("TTS error:", ttsErr)
+		os.Exit(1)
 	}
-	if ok {
-		content := req.Content
-		if len(content) > 64 {
-			content = content[:64] + "..."
-		}
-		LogInfo("%s: [%s]", GetFlag(), content)
-		LogInfo("📂: %s", toHomeRelativePath(req.Dest))
-		maxRetries := 10
-		funcs := []func(TTSRequest) (bool, error){
-			withRetry(playAudio, "main.playAudio", "    ", maxRetries),
-		}
-		if !DryRun {
-			funcs = append(funcs, withRetry(AppendRecord, "main.AppendRecord", "  ", maxRetries))
-			funcs = append(funcs, withRetry(uploadToR2, "main.uploadToR2", "", maxRetries))
-		}
 
-		var wg sync.WaitGroup
-		wg.Add(len(funcs))
-		for i, f := range funcs {
-			runWithIndent(f, req, i, &wg) // Pass retryIndex (i)
-		}
-		wg.Wait()
-		LogInfo("✅ %s: [%s]", GetFlag(), content)
+	if len(content) > 64 {
+		content = content[:64] + "..."
 	}
+	LogInfo("📂: %s", toHomeRelativePath(req.Dest))
+	maxRetries := 10
+	funcs := []func(TTSRequest) (bool, error){
+		withRetry(playAudio, "main.playAudio", "    ", maxRetries),
+	}
+	if !DryRun {
+		funcs = append(funcs, withRetry(AppendRecord, "main.AppendRecord", "  ", maxRetries))
+		funcs = append(funcs, withRetry(uploadToR2, "main.uploadToR2", "", maxRetries))
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(funcs))
+	for i, f := range funcs {
+		runWithIndent(f, req, i, &wg) // Pass retryIndex (i)
+	}
+	wg.Wait()
+	LogInfo("✅ %s: [%s]", GetFlag(), content)
 }
