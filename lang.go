@@ -43,8 +43,9 @@ var Langs = []Lang{
 		Name:     "en",
 		NameFUll: "en-US",
 		Reader:   "en-GB-HollieNeural",
-		Gender:   "Female",
-		Flag:     "🇺🇸",
+		// Reader: "en-US-JennyMultilingualNeural",
+		Gender: "Female",
+		Flag:   "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
 	},
 }
 

@@ -24,6 +24,8 @@ func AppendRecord(req TTSRequest) (bool, error) {
 		lang = "jp"
 	case "pl", "pl-PL":
 		lang = "pl"
+	case "en", "en-US":
+		lang = "en"
 	default:
 		VPrintf("Unsupported language: %s\n", req.Lang)
 		return false, fmt.Errorf("unsupported language: %s", req.Lang)
