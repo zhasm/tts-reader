@@ -14,7 +14,7 @@ func withRetry(fn retryableFunc, name, indent string, maxRetries int) retryableF
 	return func(req TTSRequest) (bool, error) {
 		var err error
 		var ok bool
-		for retryIndex := 0; retryIndex < maxRetries; retryIndex++ {
+		for retryIndex := range maxRetries {
 			LogInfo("%s%s begins", indent, name)
 			beginTime := time.Now()
 			ok, err = fn(req)
@@ -29,7 +29,7 @@ func withRetry(fn retryableFunc, name, indent string, maxRetries int) retryableF
 	}
 }
 
-func runWithIndent(fn func(TTSRequest) (bool, error), req TTSRequest, depth int, wg *sync.WaitGroup) {
+func runWithIndent(fn func(TTSRequest) (bool, error), req TTSRequest, wg *sync.WaitGroup) {
 	functionName := getFuncName(fn)
 	go func() {
 		defer wg.Done()
@@ -46,7 +46,7 @@ func runWithIndent(fn func(TTSRequest) (bool, error), req TTSRequest, depth int,
 func RetryWithBackoff(fn func() error, maxRetries int, initialInterval time.Duration) error {
 	interval := initialInterval
 	var lastErr error
-	for i := 0; i < maxRetries; i++ {
+	for i := range maxRetries {
 		err := fn()
 		if err == nil {
 			return nil
@@ -94,8 +94,8 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(len(funcs))
-	for i, f := range funcs {
-		runWithIndent(f, req, i, &wg) // Pass retryIndex (i)
+	for _, f := range funcs {
+		runWithIndent(f, req, &wg)
 	}
 	wg.Wait()
 	LogInfo("✅ %s: [%s]\n", GetFlag(), content)
