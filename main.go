@@ -98,5 +98,5 @@ func main() {
 		runWithIndent(f, req, i, &wg) // Pass retryIndex (i)
 	}
 	wg.Wait()
-	LogInfo("✅ %s: [%s]", GetFlag(), content)
+	LogInfo("✅ %s: [%s]\n", GetFlag(), content)
 }
