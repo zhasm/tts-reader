@@ -16,7 +16,7 @@ GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
 # Build flags
-LDFLAGS=-ldflags "-X main.VersionInfo=$(shell git describe --tags --always --dirty 2>/dev/null || echo 'dev')-$(shell date +%Y%m%d-%H%M)"
+LDFLAGS=-ldflags "-X main.VersionInfo=$(shell git branch --show-current)-$(shell git rev-parse --short HEAD)-$(shell date +%Y%m%d-%H%M)"
 
 # Default target
 .DEFAULT_GOAL := build
