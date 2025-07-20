@@ -23,7 +23,7 @@ LDFLAGS=-ldflags "-X main.VersionInfo=$(shell git branch --show-current)-$(shell
 
 # Build the application
 build: fmt lint
-	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) .
+	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) ./cmd/tts-reader
 
 # Build for current platform with race detection
 build-race:
@@ -49,21 +49,21 @@ pub: build
 
 # Run the application
 run:
-	$(GOCMD) run .
+	$(GOCMD) run ./cmd/tts-reader
 
 # Run with verbose output
 run-verbose:
-	$(GOCMD) run . -v
+	$(GOCMD) run ./cmd/tts-reader -v
 
 # Run with specific language
 run-fr:
-	$(GOCMD) run . -l fr "Bonjour le monde"
+	$(GOCMD) run ./cmd/tts-reader -l fr "Bonjour le monde"
 
 run-jp:
-	$(GOCMD) run . -l jp "こんにちは世界"
+	$(GOCMD) run ./cmd/tts-reader -l jp "こんにちは世界"
 
 run-pl:
-	$(GOCMD) run . -l pl "Witaj świecie"
+	$(GOCMD) run ./cmd/tts-reader -l pl "Witaj świecie"
 
 # Test the application
 test:

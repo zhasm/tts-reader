@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"slices"
@@ -43,9 +43,8 @@ var Langs = []Lang{
 		Name:     "en",
 		NameFUll: "en-US",
 		Reader:   "en-GB-HollieNeural",
-		// Reader: "en-US-JennyMultilingualNeural",
-		Gender: "Female",
-		Flag:   "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+		Gender:   "Female",
+		Flag:     "🇺🇸",
 	},
 }
 

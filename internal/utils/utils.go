@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"os"
@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-func getFuncName(i interface{}) string {
+func GetFuncName(i interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
 
 // Convert absolute path to relative path from home directory
-func toHomeRelativePath(absPath string) string {
+func ToHomeRelativePath(absPath string) string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return absPath // Return original path if we can't get home directory

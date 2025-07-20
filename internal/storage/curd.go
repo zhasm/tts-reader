@@ -1,4 +1,4 @@
-package main
+package storage
 
 import (
 	"bytes"
@@ -7,13 +7,18 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/zhasm/tts-reader/internal/tts"
+	"github.com/zhasm/tts-reader/internal/utils"
+	"github.com/zhasm/tts-reader/pkg/config"
+	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
 const (
 	CRUD_HOST = "https://tts-server.rex-zhasm6886.workers.dev/api/item"
 )
 
-func AppendRecord(req TTSRequest) (bool, error) {
+func AppendRecord(req tts.TTSRequest) (bool, error) {
 
 	// Normalize language code
 	var lang string
@@ -24,17 +29,15 @@ func AppendRecord(req TTSRequest) (bool, error) {
 		lang = "jp"
 	case "pl", "pl-PL":
 		lang = "pl"
-	case "en", "en-US":
-		lang = "en"
 	default:
-		VPrintf("Unsupported language: %s\n", req.Lang)
+		logger.VPrintf("Unsupported language: %s\n", req.Lang)
 		return false, fmt.Errorf("unsupported language: %s", req.Lang)
 	}
 
 	// Get file size in KB
 	fileInfo, err := os.Stat(req.Dest)
 	if err != nil {
-		VPrintf("Error getting file info: %v\n", err)
+		logger.VPrintf("Error getting file info: %v\n", err)
 		return false, err
 	}
 	fileSizeKb := fmt.Sprintf("%d", fileInfo.Size()/1024)
@@ -47,7 +50,7 @@ func AppendRecord(req TTSRequest) (bool, error) {
 	}
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
-		VPrintf("Error marshaling JSON: %v\n", err)
+		logger.VPrintf("Error marshaling JSON: %v\n", err)
 		return false, err
 	}
 	body := bytes.NewBuffer(jsonBytes)
@@ -58,20 +61,20 @@ func AppendRecord(req TTSRequest) (bool, error) {
 	httpHeaders := map[string]string{
 		"Content-Type": "application/json",
 	}
-	httpReq, err := newHTTPRequest("POST", CRUD_HOST, body, httpHeaders)
+	httpReq, err := utils.NewHTTPRequestWithRetry("POST", CRUD_HOST, body, httpHeaders)
 	if err != nil {
-		VPrintf("Error creating HTTP request: %v\n", err)
+		logger.VPrintf("Error creating HTTP request: %v\n", err)
 		return false, err
 	}
 
 	// Headers
 	httpReq.Header.Add("Content-Type", "application/json")
-	httpReq.Header.Add("Authorization", "Bearer "+R2_DB_TOKEN)
+	httpReq.Header.Add("Authorization", "Bearer "+config.R2_DB_TOKEN)
 
 	// Fetch Request
 	resp, err := client.Do(httpReq)
 	if err != nil {
-		VPrintln("Failure : ", err)
+		logger.VPrintln("Failure : ", err)
 		return false, err
 	}
 	defer resp.Body.Close()
@@ -80,9 +83,9 @@ func AppendRecord(req TTSRequest) (bool, error) {
 	respBody, _ := io.ReadAll(resp.Body)
 
 	// Display Results
-	VPrintln("response Status : ", resp.Status)
-	VPrintln("response Headers : ", resp.Header)
-	VPrintln("response Body : ", string(respBody))
+	logger.VPrintln("response Status : ", resp.Status)
+	logger.VPrintln("response Headers : ", resp.Header)
+	logger.VPrintln("response Body : ", string(respBody))
 	if resp.StatusCode != 200 {
 		fmt.Println("Appending record Error!")
 		os.Exit(1)

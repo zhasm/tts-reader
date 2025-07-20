@@ -1,4 +1,4 @@
-package main
+package tts
 
 import (
 	"fmt"
@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/zhasm/tts-reader/pkg/config"
 )
 
 // Mock server for testing
@@ -199,18 +201,18 @@ func TestInitFunction(t *testing.T) {
 	// Re-run init to test with the new environment variable
 	// Note: init() function is called automatically when package is imported
 	// We can't call it directly, so we'll test the variable directly
-	TTS_API_KEY = os.Getenv("TTS_API_KEY")
+	config.TTS_API_KEY = os.Getenv("TTS_API_KEY")
 
-	if TTS_API_KEY != "test-key" {
-		t.Errorf("Expected TTS_API_KEY to be 'test-key', got '%s'", TTS_API_KEY)
+	if config.TTS_API_KEY != "test-key" {
+		t.Errorf("Expected TTS_API_KEY to be 'test-key', got '%s'", config.TTS_API_KEY)
 	}
 
 	// Test without API key
 	os.Unsetenv("TTS_API_KEY")
-	TTS_API_KEY = os.Getenv("TTS_API_KEY")
+	config.TTS_API_KEY = os.Getenv("TTS_API_KEY")
 
-	if TTS_API_KEY != "" {
-		t.Errorf("Expected TTS_API_KEY to be empty when not set, got '%s'", TTS_API_KEY)
+	if config.TTS_API_KEY != "" {
+		t.Errorf("Expected TTS_API_KEY to be empty when not set, got '%s'", config.TTS_API_KEY)
 	}
 }
 

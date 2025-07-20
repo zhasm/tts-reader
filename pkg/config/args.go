@@ -1,11 +1,12 @@
-package main
+package config
 
 import (
 	"flag"
 	"fmt"
 	"os"
-	"slices"
 	"strings"
+
+	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
 var (
@@ -19,14 +20,6 @@ var (
 	DryRun      bool
 )
 
-// Now when you want to add a new flag, you just need to:
-// Register it with both short and long names using flag.*Var()
-// Add the mapping to the flagMapping map
-// The help message will automatically include it in the correct format
-// For example, if you wanted to add a --output flag with short form -o, you would just add:
-// flag.StringVar(&Output, "o", "", "output file")
-// flag.StringVar(&Output, "output", "", "output file")
-
 // flagMapping maps short flags to their corresponding long flags
 var flagMapping = map[string]string{
 	"v": "verbose",
@@ -34,7 +27,6 @@ var flagMapping = map[string]string{
 	"s": "speed",
 	"h": "help",
 	"V": "version",
-	"d": "dry-run", // <-- fix this line
 }
 
 // Dynamic usage function that groups short and long flags
@@ -120,33 +112,32 @@ func ParseArgs() {
 	for _, l := range Langs {
 		supportedLangs = append(supportedLangs, l.Name)
 	}
-	// Sort supportedLangs before joining
-	slices.Sort(supportedLangs)
-	supportedLangStr := strings.Join(supportedLangs, ", ")
 	// Then register flags with both short and long names
 	flag.BoolVar(&Verbose, "v", false, "verbose mode")
 	flag.BoolVar(&Verbose, "verbose", false, "verbose mode")
-	flag.StringVar(&Language, "l", "fr", "language ("+supportedLangStr+")")
-	flag.StringVar(&Language, "language", "fr", "language ("+supportedLangStr+")")
+	flag.StringVar(&Language, "l", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
+	flag.StringVar(&Language, "language", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
 	flag.Float64Var(&Speed, "s", 0.8, "speed (float)")
 	flag.Float64Var(&Speed, "speed", 0.8, "speed (float)")
-	flag.BoolVar(&Help, "h", false, "print help and exit")
-	flag.BoolVar(&Help, "help", false, "print help and exit")
+	flag.BoolVar(&Help, "h", false, "print help")
+	flag.BoolVar(&Help, "help", false, "print help")
 	flag.BoolVar(&Version, "V", false, "show version info")
 	flag.BoolVar(&Version, "version", false, "show version info")
-	flag.BoolVar(&DryRun, "d", false, "do not upload audio or update DB")
-	flag.BoolVar(&DryRun, "dry-run", false, "do not upload audio or update DB")
 
 	flag.Parse()
 	// Positional argument (content)
 	remaining := flag.Args()
 	if len(remaining) > 0 {
-		Content = strings.TrimSpace(remaining[0])
+		Content = remaining[0]
 	}
 
 	// Validate language
 	if !IsSupportedLang(Language) {
-		fmt.Printf("Invalid language. Choose from: [%s]. \n", GetAllLangShortNamesStr())
+		langNames := make([]string, len(Langs))
+		for i, l := range Langs {
+			langNames[i] = l.Name
+		}
+		fmt.Printf("Invalid language. Choose from: %v\n", langNames)
 		os.Exit(1)
 	}
 
@@ -164,10 +155,9 @@ func ParseArgs() {
 	}
 
 	// Print the parsed arguments
-	VPrintln("Parsed arguments:")
-	VPrintf("  Verbose : %v\n", Verbose)
-	VPrintf("  Language: %s\n", Language)
-	VPrintf("  Speed   : %v\n", Speed)
-	VPrintf("  Content : %s\n", Content)
-	VPrintf("  DryRun  : %v\n", DryRun)
+	logger.VPrintln("Parsed arguments:")
+	logger.VPrintf("  Verbose : %v\n", Verbose)
+	logger.VPrintf("  Language: %s\n", Language)
+	logger.VPrintf("  Speed   : %v\n", Speed)
+	logger.VPrintf("  Content : %s\n", Content)
 }
