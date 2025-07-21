@@ -76,6 +76,10 @@ func main() {
 	logger.Init()
 	config.Init()
 
+	if config.Version {
+		config.PrintVersion()
+	}
+
 	lang, found := config.GetLang(config.Language)
 	if !found {
 		fmt.Println("Language not found:", config.Language)

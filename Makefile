@@ -17,7 +17,7 @@ GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
 # Build flags
-LDFLAGS=-ldflags "-X main.VersionInfo=$(shell git branch --show-current)-$(shell git rev-parse --short HEAD)-$(shell date +%Y%m%d-%H%M)"
+LDFLAGS=-ldflags "-X github.com/zhasm/tts-reader/pkg/config.VersionInfo=$(shell git branch --show-current)-$(shell git rev-parse --short HEAD)-$(shell date +%Y%m%d-%H%M)"
 
 # Default target
 .DEFAULT_GOAL := build
