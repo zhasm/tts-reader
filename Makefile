@@ -23,7 +23,7 @@ LDFLAGS=-ldflags "-X main.VersionInfo=$(shell git branch --show-current)-$(shell
 .DEFAULT_GOAL := build
 
 # Build the application
-build: fmt lint test
+build: vendor fmt lint test
 	@mkdir -p build
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY_PATH) ./cmd/tts-reader
 
@@ -69,7 +69,7 @@ run-pl:
 	$(GOCMD) run ./cmd/tts-reader -l pl "Witaj świecie"
 
 # Test the application
-test:
+test: vendor
 	$(GOTEST) -v ./...
 
 # Test with coverage
@@ -102,11 +102,11 @@ deps-update:
 	$(GOMOD) tidy
 
 # Format code
-fmt:
+fmt: vendor
 	$(GOCMD) fmt ./...
 
 # Run linter (requires golangci-lint)
-lint:
+lint: vendor
 	golangci-lint run
 
 # Install golangci-lint if not present

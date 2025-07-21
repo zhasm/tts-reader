@@ -116,17 +116,13 @@ func ParseArgs() error {
 
 	var parseErr error
 	parseOnce.Do(func() {
-		// Register flags with both short and long names
-		pflag.BoolVar(&Verbose, "v", false, "verbose mode")
-		pflag.BoolVar(&Verbose, "verbose", false, "verbose mode")
-		pflag.StringVar(&Language, "l", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
-		pflag.StringVar(&Language, "language", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
-		pflag.Float64Var(&Speed, "s", 0.8, "speed (float)")
-		pflag.Float64Var(&Speed, "speed", 0.8, "speed (float)")
-		pflag.BoolVar(&Help, "h", false, "print help")
-		pflag.BoolVar(&Help, "help", false, "print help")
-		pflag.BoolVar(&Version, "V", false, "show version info")
-		pflag.BoolVar(&Version, "version", false, "show version info")
+		// Register flags with both short and long names using VarP
+		pflag.BoolVarP(&Verbose, "verbose", "v", false, "verbose mode")
+		pflag.StringVarP(&Language, "language", "l", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
+		pflag.Float64VarP(&Speed, "speed", "s", 0.8, "speed (float)")
+		pflag.BoolVarP(&Help, "help", "h", false, "print help")
+		pflag.BoolVarP(&Version, "version", "V", false, "show version info")
+		pflag.BoolVarP(&DryRun, "dry-run", "d", false, "dry run mode (no changes will be made)")
 
 		pflag.Parse()
 		// Set logger verbose flag

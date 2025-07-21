@@ -14,6 +14,10 @@ import (
 	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
+const (
+	MAX_CONTENT_LENGTH_TO_SHOW = 42
+)
+
 // Add a retry wrapper function
 type retryableFunc func(tts.TTSRequest) (bool, error)
 
@@ -83,16 +87,17 @@ func main() {
 		lang.Reader,
 	)
 	content := req.Content
-	logger.LogInfo("%s: [%s]...", config.GetFlag(), content)
+	if len(content) > MAX_CONTENT_LENGTH_TO_SHOW {
+		content = content[:MAX_CONTENT_LENGTH_TO_SHOW]
+	}
+	content = fmt.Sprintf("%s %s", config.GetFlag(), content)
+	logger.LogInfo("%s ...", content)
 	ok, ttsErr := tts.ReqTTS(req)
 	if ttsErr != nil || !ok {
 		fmt.Println("TTS error:", ttsErr)
 		os.Exit(1)
 	}
 
-	if len(content) > 64 {
-		content = content[:64]
-	}
 	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
 	maxRetries := 10
 	funcs := []func(tts.TTSRequest) (bool, error){
@@ -109,5 +114,5 @@ func main() {
 		runWithIndent(f, req, &wg)
 	}
 	wg.Wait()
-	logger.LogInfo("%s: [%s]✅ \n\n", config.GetFlag(), content)
+	logger.LogInfo("%s ✅ \n\n", content)
 }
