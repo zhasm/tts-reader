@@ -1,6 +1,8 @@
 package logger
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestInitAndLogInfo(t *testing.T) {
 	Init()
@@ -9,7 +11,6 @@ func TestInitAndLogInfo(t *testing.T) {
 
 func TestVerboseLogging(t *testing.T) {
 	Init()
-	Verbose = true
 	VPrintln("test VPrintln")
 	VPrintf("test VPrintf: %d", 42)
 	VPrint("test VPrint")

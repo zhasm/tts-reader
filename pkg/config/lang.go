@@ -90,3 +90,11 @@ func GetAllLangShortNamesStr() string {
 	slices.Sort(names)
 	return strings.Join(names, ", ")
 }
+
+// Add this function to initialize supportedLangs
+func initSupportedLangs() {
+	supportedLangs = make([]string, len(Langs))
+	for i, l := range Langs {
+		supportedLangs[i] = l.Name
+	}
+}

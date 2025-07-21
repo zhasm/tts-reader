@@ -10,7 +10,7 @@ import (
 
 var (
 	Logger  *log.Logger
-	Verbose bool
+	verbose bool
 )
 
 // Custom logger that writes with 3-digit microsecond precision
@@ -35,19 +35,24 @@ func Init() {
 	Logger = log.New(customWriter, "", 0) // No flags since we handle timestamp ourselves
 }
 
+// Add SetVerbose function
+func SetVerbose(v bool) {
+	verbose = v
+}
+
 // Only prints when Verbose is true
 func VPrintln(a ...interface{}) {
-	if Verbose {
+	if verbose {
 		Logger.Println(a...)
 	}
 }
 func VPrintf(format string, a ...interface{}) {
-	if Verbose {
+	if verbose {
 		Logger.Printf(format, a...)
 	}
 }
 func VPrint(a ...interface{}) {
-	if Verbose {
+	if verbose {
 		Logger.Print(a...)
 	}
 }

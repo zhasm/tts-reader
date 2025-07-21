@@ -70,7 +70,7 @@ run-pl:
 
 # Test the application
 test:
-	$(GOTEST) -v -count=1 ./...
+	$(GOTEST) -v ./...
 
 # Test with coverage
 test-coverage:

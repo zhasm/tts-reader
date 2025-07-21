@@ -1,11 +1,12 @@
 package config
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
+	"github.com/spf13/pflag"
 	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
@@ -37,7 +38,7 @@ func customUsage() {
 	flagGroups := make(map[string][]string)
 	flagDescriptions := make(map[string]string)
 
-	flag.VisitAll(func(f *flag.Flag) {
+	pflag.VisitAll(func(f *pflag.Flag) {
 		// Find the corresponding short/long flag
 		var shortFlag, longFlag string
 		for short, long := range flagMapping {
@@ -67,7 +68,7 @@ func customUsage() {
 
 		// Get the flag value to determine if it's a string/float/bool
 		var flagType string
-		flag.VisitAll(func(f *flag.Flag) {
+		pflag.VisitAll(func(f *pflag.Flag) {
 			if f.Name == shortFlag || f.Name == longFlag {
 				switch f.Value.String() {
 				case "true", "false":
@@ -92,7 +93,7 @@ func customUsage() {
 }
 
 func PrintHelp(code int) {
-	flag.Usage()
+	pflag.Usage()
 	os.Exit(code)
 }
 
@@ -104,56 +105,37 @@ func PrintVersion() {
 	os.Exit(0)
 }
 
+var parseOnce sync.Once
+
 func ParseArgs() error {
 	// Set custom usage function
-	flag.Usage = customUsage
+	pflag.Usage = customUsage
 
 	// Initialize supportedLangs first
-	for _, l := range Langs {
-		supportedLangs = append(supportedLangs, l.Name)
-	}
-	// Then register flags with both short and long names
-	flag.BoolVar(&Verbose, "v", false, "verbose mode")
-	flag.BoolVar(&Verbose, "verbose", false, "verbose mode")
-	flag.StringVar(&Language, "l", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
-	flag.StringVar(&Language, "language", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
-	flag.Float64Var(&Speed, "s", 0.8, "speed (float)")
-	flag.Float64Var(&Speed, "speed", 0.8, "speed (float)")
-	flag.BoolVar(&Help, "h", false, "print help")
-	flag.BoolVar(&Help, "help", false, "print help")
-	flag.BoolVar(&Version, "V", false, "show version info")
-	flag.BoolVar(&Version, "version", false, "show version info")
+	initSupportedLangs()
 
-	flag.Parse()
-	// Positional argument (content)
-	remaining := flag.Args()
-	if len(remaining) > 0 {
-		Content = remaining[0]
-	}
+	var parseErr error
+	parseOnce.Do(func() {
+		// Register flags with both short and long names
+		pflag.BoolVar(&Verbose, "v", false, "verbose mode")
+		pflag.BoolVar(&Verbose, "verbose", false, "verbose mode")
+		pflag.StringVar(&Language, "l", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
+		pflag.StringVar(&Language, "language", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
+		pflag.Float64Var(&Speed, "s", 0.8, "speed (float)")
+		pflag.Float64Var(&Speed, "speed", 0.8, "speed (float)")
+		pflag.BoolVar(&Help, "h", false, "print help")
+		pflag.BoolVar(&Help, "help", false, "print help")
+		pflag.BoolVar(&Version, "V", false, "show version info")
+		pflag.BoolVar(&Version, "version", false, "show version info")
 
-	// Validate language
-	if !IsSupportedLang(Language) {
-		return fmt.Errorf("invalid language: %s", Language)
-	}
-
-	if Help {
-		PrintHelp(0)
-	}
-
-	if Version {
-		PrintVersion()
-	}
-
-	if len(Content) == 0 {
-		fmt.Println("Content arg missing~ ")
-		PrintHelp(1)
-	}
-
-	// Print the parsed arguments
-	logger.VPrintln("Parsed arguments:")
-	logger.VPrintf("  Verbose : %v\n", Verbose)
-	logger.VPrintf("  Language: %s\n", Language)
-	logger.VPrintf("  Speed   : %v\n", Speed)
-	logger.VPrintf("  Content : %s\n", Content)
-	return nil
+		pflag.Parse()
+		// Set logger verbose flag
+		logger.SetVerbose(Verbose)
+		// Positional argument (content)
+		remaining := pflag.Args()
+		if len(remaining) > 0 {
+			Content = remaining[0]
+		}
+	})
+	return parseErr
 }
