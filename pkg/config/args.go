@@ -135,3 +135,17 @@ func ParseArgs() error {
 	})
 	return parseErr
 }
+
+// ResetArgs resets all flag variables and parseOnce for testing
+func ResetArgs() {
+	Verbose = false
+	Language = "fr"
+	Speed = 0.8
+	Content = ""
+	Help = false
+	Version = false
+	VersionInfo = ""
+	DryRun = false
+	parseOnce = sync.Once{}
+	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
+}

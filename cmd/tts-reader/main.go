@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/spf13/pflag"
 	"github.com/zhasm/tts-reader/internal/player"
 	"github.com/zhasm/tts-reader/internal/storage"
 	"github.com/zhasm/tts-reader/internal/tts"
@@ -78,6 +79,37 @@ func main() {
 
 	if config.Version {
 		config.PrintVersion()
+	}
+
+	if config.Help {
+		config.PrintHelp(0)
+	}
+
+	// If no content is provided, we should exit, unless it's a "meta" command
+	// that doesn't need content. Help and Version are already handled.
+	if config.Content == "" {
+		// If no arguments at all were provided, show help.
+		if len(os.Args) == 1 {
+			config.PrintHelp(0)
+		}
+
+		// A flag was passed, but no content. This is only ok for -v, -h, -V.
+		// -h and -V are already handled. So if -v is the *only* flag, it's ok.
+		isOnlyVerbose := false
+		if pflag.NFlag() == 1 {
+			pflag.Visit(func(f *pflag.Flag) {
+				if f.Name == "verbose" {
+					isOnlyVerbose = true
+				}
+			})
+		}
+
+		if isOnlyVerbose {
+			os.Exit(0) // Successfully do nothing.
+		}
+
+		fmt.Fprintln(os.Stderr, "Error: content argument is missing.")
+		config.PrintHelp(1)
 	}
 
 	lang, found := config.GetLang(config.Language)
