@@ -123,11 +123,13 @@ func main() {
 		lang.Reader,
 	)
 	content := req.Content
+	contentLen := len(content)
+
 	if len(content) > MAX_CONTENT_LENGTH_TO_SHOW {
-		content = content[:MAX_CONTENT_LENGTH_TO_SHOW]
+		content = content[:MAX_CONTENT_LENGTH_TO_SHOW] + "..."
 	}
-	content = fmt.Sprintf("%s %s", config.GetFlag(), content)
-	logger.LogInfo("%s ...", content)
+	content = fmt.Sprintf("%s [%s][%d]", config.GetFlag(), content, contentLen)
+	logger.LogInfo("%s ⏰", content)
 	ok, ttsErr := tts.ReqTTS(req)
 	if ttsErr != nil || !ok {
 		fmt.Println("TTS error:", ttsErr)
