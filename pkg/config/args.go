@@ -104,7 +104,7 @@ func PrintVersion() {
 	os.Exit(0)
 }
 
-func ParseArgs() {
+func ParseArgs() error {
 	// Set custom usage function
 	flag.Usage = customUsage
 
@@ -133,12 +133,7 @@ func ParseArgs() {
 
 	// Validate language
 	if !IsSupportedLang(Language) {
-		langNames := make([]string, len(Langs))
-		for i, l := range Langs {
-			langNames[i] = l.Name
-		}
-		fmt.Printf("Invalid language. Choose from: %v\n", langNames)
-		os.Exit(1)
+		return fmt.Errorf("invalid language: %s", Language)
 	}
 
 	if Help {
@@ -160,4 +155,5 @@ func ParseArgs() {
 	logger.VPrintf("  Language: %s\n", Language)
 	logger.VPrintf("  Speed   : %v\n", Speed)
 	logger.VPrintf("  Content : %s\n", Content)
+	return nil
 }

@@ -29,7 +29,10 @@ func isTest() bool {
 func Init() {
 	// Only parse args if not running tests
 	if !isTest() {
-		ParseArgs()
+		if err := ParseArgs(); err != nil {
+			logger.VPrintln("Error parsing args:", err)
+			os.Exit(1)
+		}
 	}
 	TTS_API_KEY = os.Getenv("TTS_API_KEY")
 	if TTS_API_KEY == "" {

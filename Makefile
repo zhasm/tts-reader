@@ -3,6 +3,7 @@
 
 # Variables
 BINARY_NAME=tts-reader
+BINARY_PATH=build/$(BINARY_NAME)
 BINARY_UNIX=$(BINARY_NAME)_unix
 BINARY_WINDOWS=$(BINARY_NAME).exe
 BINARY_DARWIN=$(BINARY_NAME)_darwin
@@ -11,7 +12,7 @@ BINARY_DARWIN=$(BINARY_NAME)_darwin
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
-GOTEST=$(GOCMD) test
+GOTEST=$(shell command -v gotest 2>/dev/null || echo "$(GOCMD) test")
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
@@ -22,30 +23,32 @@ LDFLAGS=-ldflags "-X main.VersionInfo=$(shell git branch --show-current)-$(shell
 .DEFAULT_GOAL := build
 
 # Build the application
-build: fmt lint
-	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) ./cmd/tts-reader
+build: fmt lint test
+	@mkdir -p build
+	$(GOBUILD) $(LDFLAGS) -o $(BINARY_PATH) ./cmd/tts-reader
 
 # Build for current platform with race detection
 build-race:
-	$(GOBUILD) $(LDFLAGS) -race -o $(BINARY_NAME) .
+	@mkdir -p build
+	$(GOBUILD) $(LDFLAGS) -race -o $(BINARY_PATH) ./cmd/tts-reader
 
 # Build for multiple platforms
 build-all: build-linux build-windows build-darwin
 
 # Build for Linux
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(BINARY_UNIX) .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o build/$(BINARY_UNIX) ./cmd/tts-reader
 
 # Build for Windows
 build-windows:
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(BINARY_WINDOWS) .
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o build/$(BINARY_WINDOWS) ./cmd/tts-reader
 
 # Build for macOS
 build-darwin:
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(BINARY_DARWIN) .
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o build/$(BINARY_DARWIN) ./cmd/tts-reader
 
 pub: build
-	cp -f $(BINARY_NAME) ~/icloud/bin/
+	cp -f build/$(BINARY_NAME) ~/icloud/bin/
 
 # Run the application
 run:
@@ -67,7 +70,7 @@ run-pl:
 
 # Test the application
 test:
-	$(GOTEST) -v ./...
+	$(GOTEST) -v -count=1 ./...
 
 # Test with coverage
 test-coverage:
@@ -81,10 +84,10 @@ test-race:
 # Clean build artifacts
 clean:
 	$(GOCLEAN)
-	rm -f $(BINARY_NAME)
-	rm -f $(BINARY_UNIX)
-	rm -f $(BINARY_WINDOWS)
-	rm -f $(BINARY_DARWIN)
+	rm -f build/$(BINARY_NAME)
+	rm -f build/$(BINARY_UNIX)
+	rm -f build/$(BINARY_WINDOWS)
+	rm -f build/$(BINARY_DARWIN)
 	rm -f coverage.out
 	rm -f coverage.html
 
@@ -151,4 +154,7 @@ help:
 .PHONY: build build-race build-all build-linux build-windows build-darwin \
         run run-verbose run-fr run-jp run-pl test test-coverage test-race \
         clean deps deps-update fmt lint install-lint security install-security \
-        dev-setup dev help
+        dev-setup dev help vendor
+
+vendor:
+	go mod vendor

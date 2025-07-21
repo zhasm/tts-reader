@@ -10,6 +10,7 @@ tools=(
   github.com/golangci/golangci-lint/cmd/golangci-lint@latest
   github.com/haya14busa/goplay/cmd/goplay@v1.0.0
   github.com/josharian/impl@v1.4.0
+  github.com/rakyll/gotest@latest
   golang.org/x/tools/cmd/goimports@latest
   golang.org/x/tools/cmd/gopls@latest
   golang.org/x/tools/cmd/gorename@latest
@@ -20,6 +21,3 @@ for i in ${tools[@]}; do
 	GO111MODULE=on go install -x -v "$i"
 done
 ```
-
-
-
