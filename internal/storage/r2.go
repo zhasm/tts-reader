@@ -5,8 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/zhasm/tts-reader/internal/tts"
+	"github.com/zhasm/tts-reader/internal/utils"
 	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
@@ -38,9 +40,16 @@ func UploadToR2(req tts.TTSRequest) (bool, error) {
 	logger.VPrintf("Uploading %s to R2...\n", filename)
 	cmd := exec.Command("rclone", "copy", filename, "r2:tts/")
 
-	if err := cmd.Run(); err != nil {
-		logger.VPrintf("Upload failed: %v\n", err)
-		return false, err
+	uploadErr := utils.RetryWithBackoff(func() error {
+		err := cmd.Run()
+		if err != nil {
+			logger.VPrintf("Upload failed: %v\n", err)
+		}
+		return err
+	}, 10, 1*time.Second)
+	if uploadErr != nil {
+		logger.VPrintf("Upload failed after retries: %v\n", uploadErr)
+		return false, uploadErr
 	}
 
 	logger.VPrintf("Successfully uploaded %s to R2\n", filename)

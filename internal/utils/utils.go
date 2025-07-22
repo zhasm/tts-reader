@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"time"
 )
 
 func GetFuncName(i interface{}) string {
@@ -26,4 +27,22 @@ func ToHomeRelativePath(absPath string) string {
 	}
 
 	return absPath // Return original path if it's not under home directory
+}
+
+// RetryWithBackoff retries the provided function with exponential backoff.
+func RetryWithBackoff(fn func() error, maxRetries int, initialInterval time.Duration) error {
+	interval := initialInterval
+	var lastErr error
+	for i := 0; i < maxRetries; i++ {
+		err := fn()
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		if i < maxRetries-1 {
+			time.Sleep(interval)
+			interval *= 2
+		}
+	}
+	return lastErr
 }

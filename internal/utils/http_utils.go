@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/zhasm/tts-reader/pkg/logger"
+	// for RetryWithBackoff
 )
 
 const MAX_RETRY = 10
@@ -57,9 +58,20 @@ func HTTPRequest(client *http.Client, httpReq *http.Request) (*http.Response, er
 	}
 
 	logger.VPrintf("Sending request...\n")
-	resp, err := client.Do(httpReq)
+	var resp *http.Response
+	var err error
+	maxRetries := 10
+	initialInterval := time.Second
+	err = RetryWithBackoff(func() error {
+		resp, err = client.Do(httpReq)
+		if err != nil || resp == nil {
+			logger.VPrintf("HTTP request failed: %v\n", err)
+			return err
+		}
+		return nil
+	}, maxRetries, initialInterval)
 	if err != nil {
-		logger.VPrintf("HTTP request failed: %v\n", err)
+		logger.VPrintf("HTTP request failed after %d attempts: %v\n", maxRetries, err)
 		return nil, err
 	}
 	if resp == nil {

@@ -71,7 +71,7 @@ func AppendRecord(req tts.TTSRequest) (bool, error) {
 	httpReq.Header.Add("Authorization", "Bearer "+config.R2_DB_TOKEN)
 
 	// Fetch Request
-	resp, err := client.Do(httpReq)
+	resp, err := utils.HTTPRequest(client, httpReq)
 	if err != nil {
 		logger.VPrintln("Failure : ", err)
 		return false, err
