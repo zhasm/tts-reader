@@ -10,7 +10,7 @@ import (
 	// for RetryWithBackoff
 )
 
-const MAX_RETRY = 10
+const MAX_RETRY = 5
 
 // NewHTTPRequestWithRetry abstracts http.NewRequest with retry logic for request creation only.
 func NewHTTPRequestWithRetry(method, url string, body io.Reader, headers map[string]string) (*http.Request, error) {
@@ -60,7 +60,6 @@ func HTTPRequest(client *http.Client, httpReq *http.Request) (*http.Response, er
 	logger.VPrintf("Sending request...\n")
 	var resp *http.Response
 	var err error
-	maxRetries := 10
 	initialInterval := time.Second
 	err = RetryWithBackoff(func() error {
 		resp, err = client.Do(httpReq)
@@ -69,9 +68,9 @@ func HTTPRequest(client *http.Client, httpReq *http.Request) (*http.Response, er
 			return err
 		}
 		return nil
-	}, maxRetries, initialInterval)
+	}, MAX_RETRY, initialInterval)
 	if err != nil {
-		logger.VPrintf("HTTP request failed after %d attempts: %v\n", maxRetries, err)
+		logger.VPrintf("HTTP request failed after %d attempts: %v\n", MAX_RETRY, err)
 		return nil, err
 	}
 	if resp == nil {

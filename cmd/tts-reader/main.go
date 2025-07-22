@@ -138,6 +138,7 @@ func main() {
 	}
 	content = fmt.Sprintf("%s [%s][%d]", config.GetFlagByName(config.Language), content, contentLen)
 	logger.LogInfo("%s ⏰", content)
+	defer logger.LogInfo("%s ✅ \n\n", content)
 	ok, ttsErr := tts.ReqTTS(req)
 	if ttsErr != nil || !ok {
 		fmt.Println("TTS error:", ttsErr)
@@ -145,13 +146,13 @@ func main() {
 	}
 
 	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
-	maxRetries := 10
+
 	funcs := []func(tts.TTSRequest) (bool, error){
-		withRetry(player.PlayAudio, "main.playAudio", "    ", maxRetries),
+		withRetry(player.PlayAudio, "main.playAudio", "    ", utils.MAX_RETRY),
 	}
 	if !config.DryRun {
-		funcs = append(funcs, withRetry(storage.AppendRecord, "main.AppendRecord", "  ", maxRetries))
-		funcs = append(funcs, withRetry(storage.UploadToR2, "main.uploadToR2", "", maxRetries))
+		funcs = append(funcs, withRetry(storage.AppendRecord, "main.AppendRecord", "  ", utils.MAX_RETRY))
+		funcs = append(funcs, withRetry(storage.UploadToR2, "main.uploadToR2", "", utils.MAX_RETRY))
 	}
 
 	var wg sync.WaitGroup
@@ -160,5 +161,4 @@ func main() {
 		runWithIndent(f, req, &wg)
 	}
 	wg.Wait()
-	logger.LogInfo("%s ✅ \n\n", content)
 }

@@ -46,7 +46,7 @@ func UploadToR2(req tts.TTSRequest) (bool, error) {
 			logger.VPrintf("Upload failed: %v\n", err)
 		}
 		return err
-	}, 10, 1*time.Second)
+	}, utils.MAX_RETRY, 1*time.Second)
 	if uploadErr != nil {
 		logger.VPrintf("Upload failed after retries: %v\n", uploadErr)
 		return false, uploadErr
