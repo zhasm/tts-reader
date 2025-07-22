@@ -84,7 +84,7 @@ func TestNewTTSRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewTTSRequest(tt.content, tt.lang, tt.reader)
+			got := NewTTSRequest(tt.content, tt.lang, tt.reader, 0.8)
 
 			// Test basic fields
 			if got.Content != tt.content {

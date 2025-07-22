@@ -32,9 +32,8 @@ const (
 	HTTP_REQEUEST_API          = "https://eastasia.tts.speech.microsoft.com/cognitiveservices/v1"
 )
 
-func NewTTSRequest(content, lang, reader string) TTSRequest {
+func NewTTSRequest(content, lang, reader string, speed float64) TTSRequest {
 	gender := "Male" // default gender
-	speed := 0.8     // default speed
 
 	// Create a unique key based on parameters
 	// the ending '\n' is on purpose, please do not delete.

@@ -126,6 +126,7 @@ func main() {
 		config.Content,
 		lang.NameFUll,
 		lang.Reader,
+		config.Speed,
 	)
 	content := req.Content
 	contentLen := len(content)
