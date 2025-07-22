@@ -21,15 +21,14 @@ const (
 func AppendRecord(req tts.TTSRequest) (bool, error) {
 
 	// Normalize language code
-	var lang string
-	switch req.Lang {
-	case "fr", "fr-FR":
-		lang = "fr"
-	case "ja", "ja-JP", "jp":
-		lang = "jp"
-	case "pl", "pl-PL":
-		lang = "pl"
-	default:
+	lang := ""
+	for _, l := range config.Langs {
+		if req.Lang == l.Name || req.Lang == l.NameFUll {
+			lang = l.Name
+			break
+		}
+	}
+	if lang == "" {
 		logger.VPrintf("Unsupported language: %s\n", req.Lang)
 		return false, fmt.Errorf("unsupported language: %s", req.Lang)
 	}

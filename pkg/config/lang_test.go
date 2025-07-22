@@ -27,7 +27,7 @@ func TestGetFlag(t *testing.T) {
 	if flag == "" {
 		t.Error("Expected flag for 'fr'")
 	}
-	flag = GetFlagByName("")
+	flag = GetFlagByName("xx")
 	if flag != "" {
 		t.Error("Expected empty flag for unsupported language")
 	}
