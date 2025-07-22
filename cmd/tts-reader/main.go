@@ -128,7 +128,7 @@ func main() {
 	if len(content) > MAX_CONTENT_LENGTH_TO_SHOW {
 		content = content[:MAX_CONTENT_LENGTH_TO_SHOW] + "..."
 	}
-	content = fmt.Sprintf("%s [%s][%d]", config.GetFlag(), content, contentLen)
+	content = fmt.Sprintf("%s [%s][%d]", config.GetFlagByName(config.Language), content, contentLen)
 	logger.LogInfo("%s ⏰", content)
 	ok, ttsErr := tts.ReqTTS(req)
 	if ttsErr != nil || !ok {

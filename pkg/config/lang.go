@@ -68,9 +68,11 @@ func GetLang(name string) (Lang, bool) {
 	return Lang{}, false
 }
 
-func GetFlag() string {
+// GetFlagByName returns the flag emoji for the given language name.
+// If the language is not supported, it returns an empty string.
+func GetFlagByName(name string) string {
 	for _, l := range Langs {
-		if l.Name == Language {
+		if l.Name == name {
 			return l.Flag
 		}
 	}
