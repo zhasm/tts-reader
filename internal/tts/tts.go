@@ -117,18 +117,14 @@ func ReqTTS(req TTSRequest) (bool, error) {
 		}
 	}
 
-	// Fetch Request
-	logger.VPrintf("Sending request...\n")
-	resp, err := client.Do(httpReq)
+	// Use the new utility function for logging and sending the request
+	resp, err := utils.HTTPRequest(client, httpReq)
 
 	if err != nil {
-		logger.VPrintf("HTTP request failed: %v\n", err)
 		return false, err
 	}
 
-	// Check if response is nil
 	if resp == nil {
-		logger.VPrintf("Error: Response is nil\n")
 		return false, fmt.Errorf("response is nil")
 	}
 

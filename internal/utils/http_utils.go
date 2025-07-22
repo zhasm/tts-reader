@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -37,6 +38,35 @@ func NewHTTPRequestWithRetry(method, url string, body io.Reader, headers map[str
 		}
 	}
 	return nil, err
+}
+
+// HTTPRequest logs the request details, sends the HTTP request, and returns the response and error.
+// Sensitive headers (like Ocp-Apim-Subscription-Key) are hidden in logs.
+func HTTPRequest(client *http.Client, httpReq *http.Request) (*http.Response, error) {
+	logger.VPrintf("Request URL: %s\n", httpReq.URL.String())
+	logger.VPrintf("Request Method: %s\n", httpReq.Method)
+	logger.VPrintf("Request Headers:\n")
+	for key, values := range httpReq.Header {
+		for _, value := range values {
+			if key == "Ocp-Apim-Subscription-Key" {
+				logger.VPrintf("  %s: [HIDDEN]\n", key)
+			} else {
+				logger.VPrintf("  %s: %s\n", key, value)
+			}
+		}
+	}
+
+	logger.VPrintf("Sending request...\n")
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		logger.VPrintf("HTTP request failed: %v\n", err)
+		return nil, err
+	}
+	if resp == nil {
+		logger.VPrintf("Error: Response is nil\n")
+		return nil, fmt.Errorf("response is nil")
+	}
+	return resp, nil
 }
 
 // buildCurlCommand constructs an equivalent curl command for debugging purposes

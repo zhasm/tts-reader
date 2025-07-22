@@ -117,6 +117,8 @@ func main() {
 		fmt.Println("Language not found:", config.Language)
 		return
 	}
+
+	// generate tts requst struct, no Internet request yet.
 	req := tts.NewTTSRequest(
 		config.Content,
 		lang.NameFUll,
