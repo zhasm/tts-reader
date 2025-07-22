@@ -26,6 +26,7 @@ func withRetry(fn retryableFunc, name, indent string, maxRetries int) retryableF
 	return func(req tts.TTSRequest) (bool, error) {
 		var err error
 		var ok bool
+		interval := time.Second
 		for retryIndex := range maxRetries {
 			logger.LogInfo("%s%s begins", indent, name)
 			beginTime := time.Now()
@@ -36,6 +37,10 @@ func withRetry(fn retryableFunc, name, indent string, maxRetries int) retryableF
 				return ok, nil
 			}
 			logger.LogInfo("%s%s [%d]failed: %v, took %.3f(s), will retry", indent, name, retryIndex, err, timeCost.Seconds())
+			if retryIndex < maxRetries-1 {
+				time.Sleep(interval)
+				interval *= 2
+			}
 		}
 		return ok, err
 	}
@@ -123,6 +128,7 @@ func main() {
 		config.Content,
 		lang.NameFUll,
 		lang.Reader,
+		config.Speed,
 	)
 	content := req.Content
 	contentLen := len(content)
@@ -130,7 +136,7 @@ func main() {
 	if len(content) > MAX_CONTENT_LENGTH_TO_SHOW {
 		content = content[:MAX_CONTENT_LENGTH_TO_SHOW] + "..."
 	}
-	content = fmt.Sprintf("%s [%s][%d]", config.GetFlag(), content, contentLen)
+	content = fmt.Sprintf("%s [%s][%d]", config.GetFlagByName(config.Language), content, contentLen)
 	logger.LogInfo("%s ⏰", content)
 	ok, ttsErr := tts.ReqTTS(req)
 	if ttsErr != nil || !ok {
