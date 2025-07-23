@@ -4,12 +4,33 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
-const MAX_RETRY = 5
+var (
+	HIDDEN_KEYS = []string{"Ocp-Apim-Subscription-Key", "Authorization"}
+)
+
+const (
+	MAX_RETRY = 5
+)
+
+// contains checks if a string is in a slice of strings
+func contains(slice []string, item string) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
+}
+
+func IsHiddenKey(key string) bool {
+	return contains(HIDDEN_KEYS, key)
+}
 
 // NewHTTPRequestWithRetry abstracts http.NewRequest with retry logic for request creation only.
 func NewHTTPRequestWithRetry(method, url string, body io.Reader, headers map[string]string) (*http.Request, error) {
@@ -18,7 +39,16 @@ func NewHTTPRequestWithRetry(method, url string, body io.Reader, headers map[str
 	delay := 200 * time.Millisecond
 	maxAttempts := MAX_RETRY
 	curlCmd := buildCurlCommand(method, url, headers, body)
-	logger.VPrintf("Curl: %s", curlCmd)
+	curlCmdForLog := curlCmd
+	for _, key := range HIDDEN_KEYS {
+		// Compile the regex pattern
+		regex := regexp.MustCompile(fmt.Sprintf("%s: \\w+", regexp.QuoteMeta(key)))
+		// Create the replacement string
+		replace := fmt.Sprintf("%s: [HIDDEN]", key)
+		// Replace all occurrences in the curlCmdForLog
+		curlCmdForLog = regex.ReplaceAllString(curlCmdForLog, replace)
+	}
+	logger.VPrintf("Curl: %s", curlCmdForLog)
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		req, err = http.NewRequest(method, url, body)
@@ -48,7 +78,7 @@ func HTTPRequest(client *http.Client, httpReq *http.Request) (*http.Response, er
 	logger.VPrintf("Request Headers:\n")
 	for key, values := range httpReq.Header {
 		for _, value := range values {
-			if key == "Ocp-Apim-Subscription-Key" {
+			if IsHiddenKey(key) {
 				logger.VPrintf("  %s: [HIDDEN]\n", key)
 			} else {
 				logger.VPrintf("  %s: %s\n", key, value)
