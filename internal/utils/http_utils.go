@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/zhasm/tts-reader/pkg/logger"
-	// for RetryWithBackoff
 )
 
 const MAX_RETRY = 5

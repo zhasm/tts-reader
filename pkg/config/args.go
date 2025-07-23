@@ -136,6 +136,36 @@ func ParseArgs() error {
 	return parseErr
 }
 
+// ValidateAndHandleArgs checks for help/version flags, missing content, and language validity. Exits if any are triggered.
+func ValidateAndHandleArgs() {
+	if Version {
+		PrintVersion()
+	}
+	if Help {
+		PrintHelp(0)
+	}
+	if Content == "" {
+		// If no arguments at all were provided, show help.
+		if len(os.Args) == 1 {
+			PrintHelp(0)
+		}
+		// A flag was passed, but no content. This is only ok for -v, -h, -V.
+		isOnlyVerbose := false
+		if pflag.NFlag() == 1 {
+			pflag.Visit(func(f *pflag.Flag) {
+				if f.Name == "verbose" {
+					isOnlyVerbose = true
+				}
+			})
+		}
+		if isOnlyVerbose {
+			os.Exit(0) // Successfully do nothing.
+		}
+		fmt.Fprintln(os.Stderr, "Error: content argument is missing.")
+		PrintHelp(1)
+	}
+}
+
 // ResetArgs resets all flag variables and parseOnce for testing
 func ResetArgs() {
 	Verbose = false
