@@ -81,6 +81,9 @@ test-coverage:
 test-race:
 	$(GOTEST) -race -v ./...
 
+install-test:
+	go install -v -x github.com/rakyll/gotest@latest
+
 # Clean build artifacts
 clean:
 	$(GOCLEAN)
@@ -92,7 +95,7 @@ clean:
 	rm -f coverage.html
 
 # Install dependencies
-deps:
+deps: install-test
 	$(GOMOD) download
 	$(GOMOD) tidy
 
