@@ -22,7 +22,8 @@ func (cl *customLogger) Write(p []byte) (n int, err error) {
 	// Get current time with microsecond precision
 	now := time.Now()
 	// Format time with 3 digits of microseconds (divide by 1000 to get milliseconds, then format)
-	timestamp := fmt.Sprintf("%s.%03d", now.Format("2006/01/02 15:04:05"), now.Nanosecond()/1000000)
+	//	timestamp := fmt.Sprintf("%s.%03d", now.Format("2006/01/02 15:04:05"), now.Nanosecond()/1000000)
+	timestamp := fmt.Sprintf("%s.%06d", now.Format("2006/01/02 15:04:05"), now.Nanosecond()/1000)
 
 	// Write timestamp + space + original message
 	formatted := fmt.Sprintf("%s %s", timestamp, string(p))

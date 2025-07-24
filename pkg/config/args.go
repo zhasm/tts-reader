@@ -137,17 +137,20 @@ func ParseArgs() error {
 }
 
 // ValidateAndHandleArgs checks for help/version flags, missing content, and language validity. Exits if any are triggered.
-func ValidateAndHandleArgs() {
+func ValidateAndHandleArgs() error {
 	if Version {
 		PrintVersion()
+		return nil
 	}
 	if Help {
 		PrintHelp(0)
+		return nil
 	}
 	if Content == "" {
 		// If no arguments at all were provided, show help.
 		if len(os.Args) == 1 {
 			PrintHelp(0)
+			return fmt.Errorf("content argument is missing")
 		}
 		// A flag was passed, but no content. This is only ok for -v, -h, -V.
 		isOnlyVerbose := false
@@ -163,7 +166,9 @@ func ValidateAndHandleArgs() {
 		}
 		fmt.Fprintln(os.Stderr, "Error: content argument is missing.")
 		PrintHelp(1)
+		return fmt.Errorf("content argument is missing")
 	}
+	return nil
 }
 
 // ResetArgs resets all flag variables and parseOnce for testing

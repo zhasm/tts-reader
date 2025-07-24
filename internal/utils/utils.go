@@ -9,7 +9,13 @@ import (
 )
 
 func GetFuncName(i interface{}) string {
-	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+	ret := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+	if !strings.Contains(ret, "/") {
+		return ret
+	} else {
+		segments := strings.Split(ret, "/")
+		return segments[len(segments)-1]
+	}
 }
 
 // Convert absolute path to relative path from home directory
