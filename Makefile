@@ -82,7 +82,7 @@ test-race:
 	$(GOTEST) -race -v ./...
 
 install-test:
-	go install -v -x github.com/rakyll/gotest@latest
+	go install github.com/rakyll/gotest@latest
 
 # Clean build artifacts
 clean:
