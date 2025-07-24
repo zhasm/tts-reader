@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -9,31 +10,80 @@ import (
 	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
-// Add a retry wrapper function
-type retryableFunc func(tts.TTSRequest) (bool, error)
+// RetryableFunc defines a function that can be retried
+type RetryableFunc func(tts.TTSRequest) (bool, error)
 
-func withRetry(fn retryableFunc, name, indent string, maxRetries int) retryableFunc {
-	return func(req tts.TTSRequest) (bool, error) {
-		var err error
-		var ok bool
-		interval := time.Second
-		for retryIndex := range maxRetries {
-			logger.LogInfo("%s%s begins", indent, name)
-			beginTime := time.Now()
-			ok, err = fn(req)
-			timeCost := time.Since(beginTime)
-			if err == nil {
-				logger.LogInfo("%s%s [%d]succeeded, took %.3f(s)", indent, name, retryIndex, timeCost.Seconds())
-				return ok, nil
-			}
-			logger.LogInfo("%s%s [%d]failed: %v, took %.3f(s), will retry", indent, name, retryIndex, err, timeCost.Seconds())
-			if retryIndex < maxRetries-1 {
-				time.Sleep(interval)
-				interval *= 2
-			}
-		}
-		return ok, err
+// RetryConfig holds configuration for retry behavior
+type RetryConfig struct {
+	Name         string
+	Indent       string
+	MaxRetries   int
+	InitialDelay time.Duration
+}
+
+// WithRetry wraps a function with retry logic and logging
+func WithRetry(fn RetryableFunc, name, indent string, maxRetries int) RetryableFunc {
+	config := RetryConfig{
+		Name:         name,
+		Indent:       indent,
+		MaxRetries:   maxRetries,
+		InitialDelay: time.Second,
 	}
+	return WithRetryConfig(fn, config)
+}
+
+// WithRetryConfig wraps a function with configurable retry logic
+func WithRetryConfig(fn RetryableFunc, config RetryConfig) RetryableFunc {
+	if config.MaxRetries <= 0 {
+		config.MaxRetries = 1
+	}
+	if config.InitialDelay <= 0 {
+		config.InitialDelay = time.Second
+	}
+
+	return func(req tts.TTSRequest) (bool, error) {
+		delay := config.InitialDelay
+
+		for attempt := 0; attempt < config.MaxRetries; attempt++ {
+			result, err := executeAttempt(fn, req, config, attempt)
+
+			// Success case - return immediately
+			if err == nil {
+				return result, nil
+			}
+
+			// Last attempt failed - return the error
+			if attempt == config.MaxRetries-1 {
+				return result, err
+			}
+
+			// Sleep before retry (exponential backoff)
+			time.Sleep(delay)
+			delay *= 2
+		}
+
+		// This should never be reached, but included for completeness
+		return false, fmt.Errorf("retry exhausted")
+	}
+}
+
+// executeAttempt runs a single attempt and handles logging
+func executeAttempt(fn RetryableFunc, req tts.TTSRequest, config RetryConfig, attempt int) (bool, error) {
+	logger.LogInfo("%s%s begins", config.Indent, config.Name)
+	start := time.Now()
+
+	result, err := fn(req)
+	duration := time.Since(start).Seconds()
+
+	if err == nil {
+		logger.LogInfo("%s%s [%d] succeeded, took %.3f(s)",
+			config.Indent, config.Name, attempt, duration)
+		return result, nil
+	}
+
+	logger.LogInfo("%s%s [%d] failed: %v, took %.3f(s), will retry",
+		config.Indent, config.Name, attempt, err, duration)
+	return result, err
 }
 
 func runWithIndent(fn func(tts.TTSRequest) (bool, error), req tts.TTSRequest, wg *sync.WaitGroup) {

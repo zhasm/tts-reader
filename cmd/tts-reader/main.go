@@ -55,11 +55,11 @@ func main() {
 	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
 
 	funcs := []func(tts.TTSRequest) (bool, error){
-		withRetry(player.PlayAudio, "main.playAudio", "    ", utils.MAX_RETRY),
+		WithRetry(player.PlayAudio, "main.playAudio", "    ", utils.MAX_RETRY),
 	}
 	if !config.DryRun {
-		funcs = append(funcs, withRetry(storage.AppendRecord, "main.AppendRecord", "  ", utils.MAX_RETRY))
-		funcs = append(funcs, withRetry(storage.UploadToR2, "main.uploadToR2", "", utils.MAX_RETRY))
+		funcs = append(funcs, WithRetry(storage.AppendRecord, "main.AppendRecord", "  ", utils.MAX_RETRY))
+		funcs = append(funcs, WithRetry(storage.UploadToR2, "main.uploadToR2", "", utils.MAX_RETRY))
 	}
 
 	var wg sync.WaitGroup
