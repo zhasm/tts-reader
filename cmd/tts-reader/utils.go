@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,6 +13,11 @@ import (
 	"github.com/zhasm/tts-reader/internal/utils"
 	"github.com/zhasm/tts-reader/pkg/config"
 	"github.com/zhasm/tts-reader/pkg/logger"
+	"golang.org/x/term"
+)
+
+const (
+	INDENT_DEFAULT = 23
 )
 
 func run() error {
@@ -56,11 +63,9 @@ func createTTSRequest(lang config.Lang) tts.TTSRequest {
 func logContentPreview(req tts.TTSRequest) string {
 	content := req.Content
 	contentLen := len(content)
-
 	if contentLen > MAX_CONTENT_LENGTH_TO_SHOW {
 		content = content[:MAX_CONTENT_LENGTH_TO_SHOW] + "..."
 	}
-	//	content =
 	return fmt.Sprintf("%s [%s][%d]", config.GetFlagByName(config.Language), content, contentLen)
 
 }
@@ -84,8 +89,8 @@ func runFunctionsConcurrently(funcs []func(tts.TTSRequest) (bool, error), req tt
 	errChan := make(chan error, len(funcs))
 	content := logContentPreview(req)
 
-	logger.LogInfo("%s ⏰", content)
-	defer logger.LogInfo("%s ✅ \n\n", content)
+	logger.LogInfo("%s", MsgWithIcon(content, "⏰"))
+	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
 
 	// Function name mapping for logging - matches the expected log output
 	funcNames := []string{
@@ -138,4 +143,39 @@ func runFunctionsConcurrently(funcs []func(tts.TTSRequest) (bool, error), req tt
 		}
 	}
 	return nil
+}
+
+func GetWindowWidth() (int, error) {
+	fd := int(os.Stdout.Fd())
+
+	// Check if the file descriptor refers to a terminal.
+	if !term.IsTerminal(fd) {
+		fmt.Println("Not running in a terminal.")
+		return 0, fmt.Errorf("not running in a terminal.")
+	}
+
+	// Get the terminal size.
+	width, _, err := term.GetSize(fd)
+	if err != nil {
+		fmt.Printf("Error getting terminal size: %v\n", err)
+		return 0, err
+	}
+
+	return width, nil
+}
+
+func MsgWithIcon(content, icon string) string {
+	defaultStr := content + " " + icon
+	width, err := GetWindowWidth()
+	if err != nil {
+		fmt.Println(err)
+		return defaultStr
+	}
+
+	n := width - len(content) - INDENT_DEFAULT
+	if n < 0 {
+		n = 0
+	}
+	spaces := strings.Repeat(" ", n)
+	return fmt.Sprintf("%s%s%s", content, spaces, icon)
 }
