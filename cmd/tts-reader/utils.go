@@ -151,15 +151,12 @@ func MsgWithIcon(content, icon string) string {
 		return defaultStr
 	}
 
-	n := width - len(content) - INDENT_DEFAULT
-	if n < 0 {
-		n = 0
-	}
+	n := max(width-len(content)-INDENT_DEFAULT, 0)
 	spaces := strings.Repeat(" ", n)
 	return fmt.Sprintf("%s%s%s", content, spaces, icon)
 }
 
-func GetFuncName(i interface{}) string {
+func GetFuncName(i any) string {
 	ret := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 	if !strings.Contains(ret, "/") {
 		return ret
