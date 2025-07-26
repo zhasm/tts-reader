@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	INDENT_DEFAULT = 23
+	INDENT_DEFAULT             = 23
+	MAX_CONTENT_LENGTH_TO_SHOW = 42
 )
 
 func run() error {
