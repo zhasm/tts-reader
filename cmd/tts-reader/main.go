@@ -56,17 +56,36 @@ func ttsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Here you would call your TTS logic, e.g., runTTS(req.Language, req.Speed, req.Content)
-	if err := RunWithAPI(req.Language, req.Speed, req.Content); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	go func() {
+		if err := RunWithAPI(req.Language, req.Speed, req.Content); err != nil {
+			fmt.Println("Error processing TTS request:", err)
+		}
+	}()
+
 	fmt.Fprintf(w, "TTS processed: language=%s, speed=%.2f, content=%q\n", req.Language, req.Speed, req.Content)
 }
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "serve" {
+		if err := config.ParseArgs(); err != nil {
+			fmt.Println("Error parsing args:", err)
+			os.Exit(1)
+		}
+		// Add Version and Help checks
+		if config.Version {
+			config.PrintVersion()
+			os.Exit(0)
+		}
+		if config.Help {
+			config.PrintHelp(0)
+			os.Exit(0)
+		}
+		if err := config.ValidatePort(); err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
 		http.HandleFunc("/tts", ttsHandler)
-		addr := "0.0.0.0:8080"
+		addr := fmt.Sprintf("0.0.0.0:%d", config.Port)
 		fmt.Println("Listening on", addr)
 		if err := http.ListenAndServe(addr, nil); err != nil {
 			fmt.Println("Error:", err)

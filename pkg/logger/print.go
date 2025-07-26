@@ -42,23 +42,23 @@ func SetVerbose(v bool) {
 }
 
 // Only prints when Verbose is true
-func VPrintln(a ...interface{}) {
+func VPrintln(a ...any) {
 	if verbose {
 		Logger.Println(a...)
 	}
 }
-func VPrintf(format string, a ...interface{}) {
+func VPrintf(format string, a ...any) {
 	if verbose {
 		Logger.Printf(format, a...)
 	}
 }
-func VPrint(a ...interface{}) {
+func VPrint(a ...any) {
 	if verbose {
 		Logger.Print(a...)
 	}
 }
 
 // LogInfo prints info messages
-func LogInfo(format string, a ...interface{}) {
+func LogInfo(format string, a ...any) {
 	Logger.Printf(format, a...)
 }

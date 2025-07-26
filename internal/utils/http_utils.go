@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"slices"
 	"time"
 
 	"github.com/zhasm/tts-reader/pkg/logger"
@@ -20,12 +21,7 @@ const (
 
 // contains checks if a string is in a slice of strings
 func contains(slice []string, item string) bool {
-	for _, v := range slice {
-		if v == item {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, item)
 }
 
 func IsHiddenKey(key string) bool {

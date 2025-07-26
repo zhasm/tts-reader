@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"reflect"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -33,15 +35,13 @@ func run() error {
 		return fmt.Errorf("language not found: %s", config.Language)
 	}
 
-	req := createTTSRequest(lang)
-	logContentPreview(req)
-
-	if ok, err := tts.ReqTTS(req); err != nil || !ok {
-		return fmt.Errorf("TTS request failed: %w", err)
-	}
-
-	funcs := buildProcessingPipeline()
-	return runFunctionsConcurrently(funcs, req)
+	req := tts.NewTTSRequest(
+		config.Content,
+		lang.NameFUll,
+		lang.Reader,
+		config.Speed,
+	)
+	return processTTSRequest(req, lang)
 }
 
 // RunWithAPI processes a TTS request from the API and returns an error if any.
@@ -57,11 +57,20 @@ func RunWithAPI(language string, speed float64, content string) error {
 		lang.Reader,
 		speed,
 	)
+	return processTTSRequest(req, lang)
+}
 
-	// This step is required to set req.Dest and possibly other fields
+// processTTSRequest handles the backend processing and logging for both CLI and API.
+func processTTSRequest(req tts.TTSRequest, lang config.Lang) error {
+	content := logContentPreview(lang, req)
+
+	logger.LogInfo("%s", MsgWithIcon(content, "⏰"))
+	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
 	if ok, err := tts.ReqTTS(req); err != nil || !ok {
 		return fmt.Errorf("TTS request failed: %w", err)
 	}
+
+	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
 
 	funcs := buildProcessingPipeline()
 	return runFunctionsConcurrently(funcs, req)
@@ -72,22 +81,13 @@ func initLoggerAndConfig() {
 	config.Init()
 }
 
-func createTTSRequest(lang config.Lang) tts.TTSRequest {
-	return tts.NewTTSRequest(
-		config.Content,
-		lang.NameFUll,
-		lang.Reader,
-		config.Speed,
-	)
-}
-
-func logContentPreview(req tts.TTSRequest) string {
+func logContentPreview(lang config.Lang, req tts.TTSRequest) string {
 	content := req.Content
 	contentLen := len(content)
 	if contentLen > MAX_CONTENT_LENGTH_TO_SHOW {
 		content = content[:MAX_CONTENT_LENGTH_TO_SHOW] + "..."
 	}
-	return fmt.Sprintf("%s [%s][%d]", config.GetFlagByName(config.Language), content, contentLen)
+	return fmt.Sprintf("%s [%s][%d]", lang.Flag, content, contentLen)
 }
 
 func buildProcessingPipeline() []func(tts.TTSRequest) (bool, error) {
@@ -107,37 +107,15 @@ func buildProcessingPipeline() []func(tts.TTSRequest) (bool, error) {
 func runFunctionsConcurrently(funcs []func(tts.TTSRequest) (bool, error), req tts.TTSRequest) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(funcs))
-	content := logContentPreview(req)
-
-	logger.LogInfo("%s", MsgWithIcon(content, "⏰"))
-	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
-	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
-
-	// Function name mapping for logging - matches the expected log output
-	funcNames := []string{
-		"main.uploadToR2",
-		"main.AppendRecord",
-		"main.playAudio",
-	}
-
-	// Indentation levels based on call hierarchy - matches expected nesting
-	indentLevels := []string{
-		"  ",     // main.uploadToR2 - no indent
-		"    ",   // main.AppendRecord - 2 spaces
-		"      ", // main.playAudio - 4 spaces
-	}
 
 	wg.Add(len(funcs))
 	for i, f := range funcs {
-		funcName := funcNames[i]
-		indent := ""
-		if i < len(indentLevels) {
-			indent = indentLevels[i]
-		}
+		funcName := GetFuncName(f)
+		indent := strings.Repeat("  ", i) + "  " // 2 spaces per level
 
 		// Log function start
 		logger.LogInfo("%s%s begins", indent, funcName)
-		go func(i int, f func(tts.TTSRequest) (bool, error)) {
+		go func(i int, f func(tts.TTSRequest) (bool, error), funcName, indent string) {
 			defer wg.Done()
 
 			start := time.Now()
@@ -153,7 +131,7 @@ func runFunctionsConcurrently(funcs []func(tts.TTSRequest) (bool, error), req tt
 			} else {
 				logger.LogInfo("%s%s [%d] succeeded, took %.3f(s)", indent, funcName, i, duration)
 			}
-		}(i, f)
+		}(i, f, funcName, indent)
 	}
 	wg.Wait()
 	close(errChan)
@@ -191,10 +169,17 @@ func MsgWithIcon(content, icon string) string {
 		return defaultStr
 	}
 
-	n := width - len(content) - INDENT_DEFAULT
-	if n < 0 {
-		n = 0
-	}
+	n := max(width-len(content)-INDENT_DEFAULT, 0)
 	spaces := strings.Repeat(" ", n)
 	return fmt.Sprintf("%s%s%s", content, spaces, icon)
+}
+
+func GetFuncName(i any) string {
+	ret := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+	if !strings.Contains(ret, "/") {
+		return ret
+	} else {
+		segments := strings.Split(ret, "/")
+		return segments[len(segments)-1]
+	}
 }
