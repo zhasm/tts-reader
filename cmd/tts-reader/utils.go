@@ -39,10 +39,7 @@ func run() error {
 		return fmt.Errorf("TTS request failed: %w", err)
 	}
 
-	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
-
 	funcs := buildProcessingPipeline()
-
 	return runFunctionsConcurrently(funcs, req)
 }
 
@@ -67,7 +64,6 @@ func logContentPreview(req tts.TTSRequest) string {
 		content = content[:MAX_CONTENT_LENGTH_TO_SHOW] + "..."
 	}
 	return fmt.Sprintf("%s [%s][%d]", config.GetFlagByName(config.Language), content, contentLen)
-
 }
 
 func buildProcessingPipeline() []func(tts.TTSRequest) (bool, error) {
@@ -90,6 +86,7 @@ func runFunctionsConcurrently(funcs []func(tts.TTSRequest) (bool, error), req tt
 	content := logContentPreview(req)
 
 	logger.LogInfo("%s", MsgWithIcon(content, "⏰"))
+	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
 	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
 
 	// Function name mapping for logging - matches the expected log output
@@ -150,8 +147,7 @@ func GetWindowWidth() (int, error) {
 
 	// Check if the file descriptor refers to a terminal.
 	if !term.IsTerminal(fd) {
-		fmt.Println("Not running in a terminal.")
-		return 0, fmt.Errorf("not running in a terminal.")
+		return 0, fmt.Errorf("not running in a terminal")
 	}
 
 	// Get the terminal size.
@@ -168,7 +164,6 @@ func MsgWithIcon(content, icon string) string {
 	defaultStr := content + " " + icon
 	width, err := GetWindowWidth()
 	if err != nil {
-		fmt.Println(err)
 		return defaultStr
 	}
 
