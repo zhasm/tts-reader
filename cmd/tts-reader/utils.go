@@ -44,6 +44,29 @@ func run() error {
 	return runFunctionsConcurrently(funcs, req)
 }
 
+// RunWithAPI processes a TTS request from the API and returns an error if any.
+func RunWithAPI(language string, speed float64, content string) error {
+	initLoggerAndConfig()
+	lang, found := config.GetLang(language)
+	if !found {
+		return fmt.Errorf("language not found: %s", language)
+	}
+	req := tts.NewTTSRequest(
+		content,
+		lang.NameFUll,
+		lang.Reader,
+		speed,
+	)
+
+	// This step is required to set req.Dest and possibly other fields
+	if ok, err := tts.ReqTTS(req); err != nil || !ok {
+		return fmt.Errorf("TTS request failed: %w", err)
+	}
+
+	funcs := buildProcessingPipeline()
+	return runFunctionsConcurrently(funcs, req)
+}
+
 func initLoggerAndConfig() {
 	logger.Init()
 	config.Init()

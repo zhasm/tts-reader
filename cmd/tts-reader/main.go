@@ -56,7 +56,11 @@ func ttsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Here you would call your TTS logic, e.g., runTTS(req.Language, req.Speed, req.Content)
-	fmt.Fprintf(w, "Received: language=%s, speed=%.2f, content=%q\n", req.Language, req.Speed, req.Content)
+	if err := RunWithAPI(req.Language, req.Speed, req.Content); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "TTS processed: language=%s, speed=%.2f, content=%q\n", req.Language, req.Speed, req.Content)
 }
 
 func main() {
