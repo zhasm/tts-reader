@@ -27,7 +27,7 @@ func ToHomeRelativePath(absPath string) string {
 func RetryWithBackoff(fn func() error, maxRetries int, initialInterval time.Duration) error {
 	interval := initialInterval
 	var lastErr error
-	for i := 0; i < maxRetries; i++ {
+	for i := range maxRetries {
 		err := fn()
 		if err == nil {
 			return nil
