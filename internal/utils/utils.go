@@ -2,21 +2,9 @@ package utils
 
 import (
 	"os"
-	"reflect"
-	"runtime"
 	"strings"
 	"time"
 )
-
-func GetFuncName(i interface{}) string {
-	ret := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
-	if !strings.Contains(ret, "/") {
-		return ret
-	} else {
-		segments := strings.Split(ret, "/")
-		return segments[len(segments)-1]
-	}
-}
 
 // Convert absolute path to relative path from home directory
 func ToHomeRelativePath(absPath string) string {

@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"reflect"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -33,11 +35,15 @@ func run() error {
 	}
 
 	req := createTTSRequest(lang)
-	logContentPreview(req)
+	content := logContentPreview(req)
 
+	logger.LogInfo("%s", MsgWithIcon(content, "⏰"))
+	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
 	if ok, err := tts.ReqTTS(req); err != nil || !ok {
 		return fmt.Errorf("TTS request failed: %w", err)
 	}
+
+	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
 
 	funcs := buildProcessingPipeline()
 	return runFunctionsConcurrently(funcs, req)
@@ -83,37 +89,15 @@ func buildProcessingPipeline() []func(tts.TTSRequest) (bool, error) {
 func runFunctionsConcurrently(funcs []func(tts.TTSRequest) (bool, error), req tts.TTSRequest) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(funcs))
-	content := logContentPreview(req)
-
-	logger.LogInfo("%s", MsgWithIcon(content, "⏰"))
-	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
-	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
-
-	// Function name mapping for logging - matches the expected log output
-	funcNames := []string{
-		"main.uploadToR2",
-		"main.AppendRecord",
-		"main.playAudio",
-	}
-
-	// Indentation levels based on call hierarchy - matches expected nesting
-	indentLevels := []string{
-		"  ",     // main.uploadToR2 - no indent
-		"    ",   // main.AppendRecord - 2 spaces
-		"      ", // main.playAudio - 4 spaces
-	}
 
 	wg.Add(len(funcs))
 	for i, f := range funcs {
-		funcName := funcNames[i]
-		indent := ""
-		if i < len(indentLevels) {
-			indent = indentLevels[i]
-		}
+		funcName := GetFuncName(f)
+		indent := strings.Repeat("  ", i) + "  " // 2 spaces per level
 
 		// Log function start
 		logger.LogInfo("%s%s begins", indent, funcName)
-		go func(i int, f func(tts.TTSRequest) (bool, error)) {
+		go func(i int, f func(tts.TTSRequest) (bool, error), funcName, indent string) {
 			defer wg.Done()
 
 			start := time.Now()
@@ -129,7 +113,7 @@ func runFunctionsConcurrently(funcs []func(tts.TTSRequest) (bool, error), req tt
 			} else {
 				logger.LogInfo("%s%s [%d] succeeded, took %.3f(s)", indent, funcName, i, duration)
 			}
-		}(i, f)
+		}(i, f, funcName, indent)
 	}
 	wg.Wait()
 	close(errChan)
@@ -173,4 +157,14 @@ func MsgWithIcon(content, icon string) string {
 	}
 	spaces := strings.Repeat(" ", n)
 	return fmt.Sprintf("%s%s%s", content, spaces, icon)
+}
+
+func GetFuncName(i interface{}) string {
+	ret := runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+	if !strings.Contains(ret, "/") {
+		return ret
+	} else {
+		segments := strings.Split(ret, "/")
+		return segments[len(segments)-1]
+	}
 }
