@@ -121,7 +121,7 @@ func runFunctionsConcurrently(funcs []func(tts.TTSRequest) (bool, error), req tt
 				logger.LogInfo("%s%s [%d] failed, took %.3f(s)", indent, funcName, i, duration)
 				errChan <- fmt.Errorf("function %d failed: %w", i, err)
 			} else {
-				logger.LogInfo("%s%s [%d] succeeded, took %.3f(s)", indent, funcName, i, duration)
+				logger.LogInfo("%s%s succeeded, took %.3f(s)", indent, funcName, duration)
 			}
 		}(i, f, funcName, indent)
 	}
