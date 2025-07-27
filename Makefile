@@ -107,6 +107,7 @@ deps-update:
 # Format code
 fmt: vendor
 	$(GOCMD) fmt ./...
+	modernize -fix -test ./...
 
 # Run linter (requires golangci-lint)
 lint: vendor
@@ -115,6 +116,7 @@ lint: vendor
 # Install golangci-lint if not present
 install-lint:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest
 
 # Check for security vulnerabilities
 security:

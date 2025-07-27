@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 )
@@ -13,6 +15,7 @@ type Lang struct {
 	Reader   string
 	Gender   string
 	Flag     string
+	Regex    string
 }
 
 // Define the supported languages
@@ -24,6 +27,7 @@ var Langs = []Lang{
 		Reader:   "fr-FR-DeniseNeural",
 		Gender:   "Male",
 		Flag:     "🇫🇷",
+		Regex:    "[a-zA-ZÀ-ÿ]+",
 	},
 	{
 		Name:     "pl",
@@ -31,6 +35,7 @@ var Langs = []Lang{
 		Reader:   "pl-PL-AgnieszkaNeural",
 		Gender:   "Female",
 		Flag:     "🇵🇱",
+		Regex:    "[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+",
 	},
 	{
 		Name:     "jp",
@@ -38,6 +43,7 @@ var Langs = []Lang{
 		Reader:   "ja-JP-MayuNeural",
 		Gender:   "Female",
 		Flag:     "🇯🇵",
+		Regex:    "[ぁ-んァ-ン一-龯]+",
 	},
 	{
 		Name:     "en",
@@ -45,6 +51,7 @@ var Langs = []Lang{
 		Reader:   "en-GB-HollieNeural",
 		Gender:   "Female",
 		Flag:     "🇺🇸",
+		Regex:    "[a-zA-Z]+",
 	},
 }
 
@@ -66,6 +73,20 @@ func GetLang(name string) (Lang, bool) {
 		}
 	}
 	return Lang{}, false
+}
+
+// GetRegex returns the regex of given language.
+func ValidateLangRegex(langName, content string) (bool, error) {
+	for _, l := range Langs {
+		if l.Name == langName {
+			ok, err := regexp.MatchString(l.Regex, content)
+			if err != nil {
+				return false, fmt.Errorf("error matching regex: %w", err)
+			}
+			return ok, nil
+		}
+	}
+	return false, fmt.Errorf("not supported language: %s", langName)
 }
 
 // GetFlagByName returns the flag emoji for the given language name.

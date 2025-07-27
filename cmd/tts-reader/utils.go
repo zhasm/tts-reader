@@ -37,11 +37,21 @@ func run() error {
 	req := createTTSRequest(lang)
 	content := logContentPreview(req)
 
+	if ok, err := config.ValidateLangRegex(config.Language, config.Content); err != nil {
+		return fmt.Errorf("language validation failed: %w", err)
+	} else if !ok {
+		return fmt.Errorf("language validation failed: %s", config.Language)
+	}
+
 	logger.LogInfo("%s", MsgWithIcon(content, "⏰"))
 	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
+	logger.LogInfo("⌛️ TTS request in progress...")
+	start := time.Now()
 	if ok, err := tts.ReqTTS(req); err != nil || !ok {
 		return fmt.Errorf("TTS request failed: %w", err)
 	}
+	duration := time.Since(start).Seconds()
+	logger.LogInfo("✅ TTS request completed, took %.3f(s)", duration)
 
 	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
 
