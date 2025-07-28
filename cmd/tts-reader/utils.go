@@ -46,14 +46,14 @@ func run() error {
 	logger.LogInfo("%s", MsgWithIcon(content, "⏰"))
 	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
 	logger.LogInfo("⌛️ TTS request in progress...")
+	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
+
 	start := time.Now()
 	if ok, err := tts.ReqTTS(req); err != nil || !ok {
 		return fmt.Errorf("TTS request failed: %w", err)
 	}
 	duration := time.Since(start).Seconds()
 	logger.LogInfo("✅ TTS request completed, took %.3f(s)", duration)
-
-	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
 
 	funcs := buildProcessingPipeline()
 	return runFunctionsConcurrently(funcs, req)
