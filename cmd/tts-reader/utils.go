@@ -64,13 +64,23 @@ func RunWithAPI(language string, speed float64, content string) error {
 func processTTSRequest(req tts.TTSRequest, lang config.Lang) error {
 	content := logContentPreview(lang, req)
 
+	if ok, err := config.ValidateLangRegex(config.Language, config.Content); err != nil {
+		return fmt.Errorf("language validation failed: %w", err)
+	} else if !ok {
+		return fmt.Errorf("language validation failed: %s", config.Language)
+	}
+
 	logger.LogInfo("%s", MsgWithIcon(content, "⏰"))
 	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
+	logger.LogInfo("⌛️ TTS request in progress...")
+	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
+
+	start := time.Now()
 	if ok, err := tts.ReqTTS(req); err != nil || !ok {
 		return fmt.Errorf("TTS request failed: %w", err)
 	}
-
-	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
+	duration := time.Since(start).Seconds()
+	logger.LogInfo("✅ TTS request completed, took %.3f(s)", duration)
 
 	funcs := buildProcessingPipeline()
 	return runFunctionsConcurrently(funcs, req)
@@ -129,7 +139,7 @@ func runFunctionsConcurrently(funcs []func(tts.TTSRequest) (bool, error), req tt
 				logger.LogInfo("%s%s [%d] failed, took %.3f(s)", indent, funcName, i, duration)
 				errChan <- fmt.Errorf("function %d failed: %w", i, err)
 			} else {
-				logger.LogInfo("%s%s [%d] succeeded, took %.3f(s)", indent, funcName, i, duration)
+				logger.LogInfo("%s%s succeeded, took %.3f(s)", indent, funcName, duration)
 			}
 		}(i, f, funcName, indent)
 	}

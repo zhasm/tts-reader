@@ -59,12 +59,14 @@ func NewTTSRequest(content, lang, reader string, speed float64) TTSRequest {
 func ReqTTS(req TTSRequest) (bool, error) {
 
 	// Check if destination file already exists and is valid
-	if valid, _ := isAudioFileValid(req.Dest); valid {
-		// Get file info for logging
-		if fileInfo, err := os.Stat(req.Dest); err == nil {
-			logger.VPrintf("File already exists: %s (size: %d bytes)\n", req.Dest, fileInfo.Size())
+	if !config.OverWrite {
+		if valid, _ := isAudioFileValid(req.Dest); valid {
+			// Get file info for logging
+			if fileInfo, err := os.Stat(req.Dest); err == nil {
+				logger.VPrintf("File already exists: %s (size: %d bytes)\n", req.Dest, fileInfo.Size())
+			}
+			return true, nil
 		}
-		return true, nil
 	}
 
 	logger.VPrintf("Content: %s\n", req.Content)

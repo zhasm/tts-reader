@@ -20,6 +20,7 @@ var (
 	VersionInfo string
 	DryRun      bool
 	Port        int = 8080
+	OverWrite   bool
 )
 
 // flagMapping maps short flags to their corresponding long flags
@@ -30,6 +31,8 @@ var flagMapping = map[string]string{
 	"h": "help",
 	"V": "version",
 	"p": "port",
+	"d": "dry-run",
+	"o": "over-write",
 }
 
 // Dynamic usage function that groups short and long flags
@@ -126,6 +129,7 @@ func ParseArgs() error {
 		pflag.BoolVarP(&Version, "version", "V", false, "show version info and exit")
 		pflag.BoolVarP(&DryRun, "dry-run", "d", false, "dry run mode (no changes will be made)")
 		pflag.IntVarP(&Port, "port", "p", 8080, "TCP port for server mode (1-65535). default: 8080")
+		pflag.BoolVarP(&OverWrite, "over-write", "o", false, "force re-download even if file exists")
 
 		pflag.Parse()
 		// Set logger verbose flag
@@ -152,7 +156,7 @@ func ValidateAndHandleArgs() error {
 	if Content == "" {
 		// If no arguments at all were provided, show help.
 		if len(os.Args) == 1 {
-			PrintHelp(1) // <-- Use exit code 1 for error
+			PrintHelp(0)
 			return fmt.Errorf("content argument is missing")
 		}
 		// A flag was passed, but no content. This is only ok for -v, -h, -V.
