@@ -19,6 +19,7 @@ var (
 	Version     bool
 	VersionInfo string
 	DryRun      bool
+	OverWrite   bool
 )
 
 // flagMapping maps short flags to their corresponding long flags
@@ -28,6 +29,8 @@ var flagMapping = map[string]string{
 	"s": "speed",
 	"h": "help",
 	"V": "version",
+	"d": "dry-run",
+	"o": "over-write",
 }
 
 // Dynamic usage function that groups short and long flags
@@ -118,11 +121,12 @@ func ParseArgs() error {
 	parseOnce.Do(func() {
 		// Register flags with both short and long names using VarP
 		pflag.BoolVarP(&Verbose, "verbose", "v", false, "verbose mode")
-		pflag.StringVarP(&Language, "language", "l", "fr", "language ("+strings.Join(supportedLangs, ", ")+")")
+		pflag.StringVarP(&Language, "language", "l", "fr", "language ("+GetAllLangShortNamesStr()+")")
 		pflag.Float64VarP(&Speed, "speed", "s", 0.8, "speed (float)")
 		pflag.BoolVarP(&Help, "help", "h", false, "print help")
 		pflag.BoolVarP(&Version, "version", "V", false, "show version info")
 		pflag.BoolVarP(&DryRun, "dry-run", "d", false, "dry run mode (no changes will be made)")
+		pflag.BoolVarP(&OverWrite, "over-write", "o", false, "force re-download even if file exists")
 
 		pflag.Parse()
 		// Set logger verbose flag
