@@ -73,7 +73,7 @@ func processTTSRequest(req tts.TTSRequest, lang config.Lang) error {
 	logger.LogInfo("%s", MsgWithIcon(content, "⏰"))
 	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
 	logger.LogInfo("⌛️ TTS request in progress...")
-	defer logger.LogInfo("%s\n\n", MsgWithIcon(content, "✅"))
+	defer logger.LogInfo("%s\n", MsgWithIcon(content, "✅"))
 
 	start := time.Now()
 	if ok, err := tts.ReqTTS(req); err != nil || !ok {
@@ -136,7 +136,7 @@ func runFunctionsConcurrently(funcs []func(tts.TTSRequest) (bool, error), req tt
 			duration := time.Since(start).Seconds()
 
 			if err != nil || !ok {
-				logger.LogInfo("%s%s [%d] failed, took %.3f(s)", indent, funcName, i, duration)
+				logger.LogWarn("%s%s [%d] failed, took %.3f(s)", indent, funcName, i, duration)
 				errChan <- fmt.Errorf("function %d failed: %w", i, err)
 			} else {
 				logger.LogInfo("%s%s succeeded, took %.3f(s)", indent, funcName, duration)

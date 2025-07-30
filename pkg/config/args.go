@@ -10,8 +10,11 @@ import (
 	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
+const (
+	DEFAULT_LOG_LEVEL = "info"
+)
+
 var (
-	Verbose     bool
 	Language    string
 	Speed       float64 = 0.8
 	Content     string
@@ -21,11 +24,11 @@ var (
 	DryRun      bool
 	Port        int = 8080
 	OverWrite   bool
+	LogLevel    string = DEFAULT_LOG_LEVEL
 )
 
 // flagMapping maps short flags to their corresponding long flags
 var flagMapping = map[string]string{
-	"v": "verbose",
 	"l": "language",
 	"s": "speed",
 	"h": "help",
@@ -33,6 +36,7 @@ var flagMapping = map[string]string{
 	"p": "port",
 	"d": "dry-run",
 	"o": "over-write",
+	"L": "log-level",
 }
 
 // Dynamic usage function that groups short and long flags
@@ -83,6 +87,8 @@ func customUsage() {
 						flagType = "string"
 					} else if strings.Contains(f.Name, "speed") {
 						flagType = "float"
+					} else if strings.Contains(f.Name, "log-level") {
+						flagType = "string"
 					}
 				}
 			}
@@ -122,7 +128,7 @@ func ParseArgs() error {
 	var parseErr error
 	parseOnce.Do(func() {
 		// Register flags with both short and long names using VarP
-		pflag.BoolVarP(&Verbose, "verbose", "v", false, "verbose mode")
+		pflag.StringVarP(&LogLevel, "log-level", "L", DEFAULT_LOG_LEVEL, "log level: debug(d), info(i), warn(w), error(e)")
 		pflag.StringVarP(&Language, "language", "l", "fr", "language ("+GetAllLangShortNamesStr()+")")
 		pflag.Float64VarP(&Speed, "speed", "s", 0.8, "speed (float)")
 		pflag.BoolVarP(&Help, "help", "h", false, "print help and exit")
@@ -132,8 +138,32 @@ func ParseArgs() error {
 		pflag.BoolVarP(&OverWrite, "over-write", "o", false, "force re-download even if file exists")
 
 		pflag.Parse()
-		// Set logger verbose flag
-		logger.SetVerbose(Verbose)
+		// Validate log level
+		LogLevel = strings.ToLower(LogLevel)
+		// Map single-letter aliases to full log level names
+		switch LogLevel {
+		case "d":
+			LogLevel = "debug"
+		case "i":
+			LogLevel = "info"
+		case "w":
+			LogLevel = "warn"
+		case "e":
+			LogLevel = "error"
+		}
+		validLogLevels := map[string]bool{
+			"debug": true,
+			"info":  true,
+			"warn":  true,
+			"error": true,
+		}
+		if !validLogLevels[LogLevel] {
+			fmt.Fprintf(os.Stderr, "Error: invalid log level: %s\n", LogLevel)
+			fmt.Fprintf(os.Stderr, "Valid log levels: debug(d), info(i), warn(w), error(e)\n")
+			os.Exit(2)
+		}
+		// Set logger log level
+		logger.SetLogLevel(LogLevel)
 		// Positional argument (content)
 		remaining := pflag.Args()
 		if len(remaining) > 0 {
@@ -159,18 +189,6 @@ func ValidateAndHandleArgs() error {
 			PrintHelp(0)
 			return fmt.Errorf("content argument is missing")
 		}
-		// A flag was passed, but no content. This is only ok for -v, -h, -V.
-		isOnlyVerbose := false
-		if pflag.NFlag() == 1 {
-			pflag.Visit(func(f *pflag.Flag) {
-				if f.Name == "verbose" {
-					isOnlyVerbose = true
-				}
-			})
-		}
-		if isOnlyVerbose {
-			os.Exit(0) // Successfully do nothing.
-		}
 		fmt.Fprintln(os.Stderr, "Error: content argument is missing.")
 		PrintHelp(1)
 		return fmt.Errorf("content argument is missing")
@@ -180,7 +198,7 @@ func ValidateAndHandleArgs() error {
 
 // ResetArgs resets all flag variables and parseOnce for testing
 func ResetArgs() {
-	Verbose = false
+	LogLevel = DEFAULT_LOG_LEVEL
 	Language = "fr"
 	Speed = 0.8
 	Content = ""
@@ -189,6 +207,7 @@ func ResetArgs() {
 	VersionInfo = ""
 	DryRun = false
 	Port = 8080
+	OverWrite = false
 	parseOnce = sync.Once{}
 	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 }

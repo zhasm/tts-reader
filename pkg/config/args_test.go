@@ -52,26 +52,6 @@ func TestParseArgs_ShortVersion(t *testing.T) {
 	}
 }
 
-func TestParseArgs_Verbose(t *testing.T) {
-	ResetArgs()
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	os.Args = []string{"cmd", "--verbose"}
-	_ = ParseArgs()
-	if !Verbose {
-		t.Errorf("Expected Verbose to be true when --verbose is passed")
-	}
-}
-
-func TestParseArgs_ShortVerbose(t *testing.T) {
-	ResetArgs()
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	os.Args = []string{"cmd", "-v"}
-	_ = ParseArgs()
-	if !Verbose {
-		t.Errorf("Expected Verbose to be true when -v is passed")
-	}
-}
-
 func TestParseArgs_Language(t *testing.T) {
 	ResetArgs()
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)

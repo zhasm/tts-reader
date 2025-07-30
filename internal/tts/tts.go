@@ -38,9 +38,9 @@ func NewTTSRequest(content, lang, reader string, speed float64) TTSRequest {
 	// Create a unique key based on parameters
 	// the ending '\n' is on purpose, please do not delete.
 	keyData := fmt.Sprintf("%s-%s-%s-%s-%.1f\n", lang, reader, gender, content, speed)
-	logger.VPrintf("DEBUG: Key data string: '%s'\n", keyData)
+	logger.LogDebug("Key data string: '%s'", keyData)
 	key := fmt.Sprintf("%x", md5.Sum([]byte(keyData)))
-	logger.VPrintf("DEBUG: Generated MD5: %s\n", key)
+	logger.LogDebug("Generated MD5: %s", key)
 
 	// Create destination path
 	dest := fmt.Sprintf("%s/%s.mp3", config.TTS_PATH, key)
@@ -63,17 +63,17 @@ func ReqTTS(req TTSRequest) (bool, error) {
 		if valid, _ := isAudioFileValid(req.Dest); valid {
 			// Get file info for logging
 			if fileInfo, err := os.Stat(req.Dest); err == nil {
-				logger.VPrintf("File already exists: %s (size: %d bytes)\n", req.Dest, fileInfo.Size())
+				logger.LogDebug("File already exists: %s (size: %d bytes)", req.Dest, fileInfo.Size())
 			}
 			return true, nil
 		}
 	}
 
-	logger.VPrintf("Content: %s\n", req.Content)
-	logger.VPrintf("Language: %s\n", req.Lang)
-	logger.VPrintf("Reader: %s\n", req.Reader)
-	logger.VPrintf("Speed: %f\n", req.Speed)
-	logger.VPrintf("API Key set: %t\n", config.TTS_API_KEY != "")
+	logger.LogDebug("Content: %s", req.Content)
+	logger.LogDebug("Language: %s", req.Lang)
+	logger.LogDebug("Reader: %s", req.Reader)
+	logger.LogDebug("Speed: %f", req.Speed)
+	logger.LogDebug("API Key set: %t", config.TTS_API_KEY != "")
 
 	// cURL (POST https://eastasia.tts.speech.microsoft.com/cognitiveservices/v1)
 	ssmlBody := fmt.Sprintf(`
@@ -83,7 +83,7 @@ func ReqTTS(req TTSRequest) (bool, error) {
 		</voice>
 		</speak>`, req.Lang, req.Lang, req.Reader, req.Speed, req.Content)
 
-	logger.VPrintf("Generated SSML:\n%s\n", ssmlBody)
+	logger.LogDebug("Generated SSML:%s\n", ssmlBody)
 
 	body := strings.NewReader(ssmlBody)
 
@@ -101,19 +101,19 @@ func ReqTTS(req TTSRequest) (bool, error) {
 	}
 	httpReq, err := utils.NewHTTPRequestWithRetry("POST", HTTP_REQEUEST_API, body, httpHeaders)
 	if err != nil {
-		logger.VPrintf("Error creating request: %v\n", err)
+		logger.LogError("Error creating request: %v", err)
 		return false, err
 	}
 
-	logger.VPrintf("Request URL: %s\n", httpReq.URL.String())
-	logger.VPrintf("Request Method: %s\n", httpReq.Method)
-	logger.VPrintf("Request Headers:\n")
+	logger.LogDebug("Request URL: %s", httpReq.URL.String())
+	logger.LogDebug("Request Method: %s", httpReq.Method)
+	logger.LogDebug("Request Headers:")
 	for key, values := range httpReq.Header {
 		for _, value := range values {
 			if key == "Ocp-Apim-Subscription-Key" {
-				logger.VPrintf("  %s: [HIDDEN]\n", key)
+				logger.LogDebug("  %s: [HIDDEN]", key)
 			} else {
-				logger.VPrintf("  %s: %s\n", key, value)
+				logger.LogDebug("  %s: %s", key, value)
 			}
 		}
 	}
@@ -134,63 +134,63 @@ func ReqTTS(req TTSRequest) (bool, error) {
 	// Read Response Body
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.VPrintf("Error reading response body: %v\n", err)
+		logger.LogError("Error reading response body: %v", err)
 		return false, err
 	}
 
 	if resp.StatusCode != 200 {
-		fmt.Println("Requesting TTS Error!")
+		logger.LogError("Requesting TTS Error!")
 		os.Exit(1)
 	}
 
 	// Display Results
-	logger.VPrintf("=== Response Details ===\n")
-	logger.VPrintf("Response Status: %s\n", resp.Status)
-	logger.VPrintf("Response Headers:\n")
+	logger.LogDebug("=== Response Details ===")
+	logger.LogDebug("Response Status: %s", resp.Status)
+	logger.LogDebug("Response Headers:")
 	for key, values := range resp.Header {
 		for _, value := range values {
-			logger.VPrintf("  %s: %s\n", key, value)
+			logger.LogDebug("  %s: %s", key, value)
 		}
 	}
-	logger.VPrintf("Response Body Length: %d bytes\n", len(respBody))
+	logger.LogDebug("Response Body Length: %d bytes", len(respBody))
 	if len(respBody) < 1000 {
-		logger.VPrintf("Response Body: %s\n", string(respBody))
+		logger.LogDebug("Response Body: %s", string(respBody))
 	} else {
-		logger.VPrintf("Response Body (first 1000 chars): %s...\n", string(respBody[:1000]))
+		logger.LogDebug("Response Body (first 1000 chars): %s...", string(respBody[:1000]))
 	}
 
 	// Write audio content to destination file
-	logger.VPrintf("Writing audio to: %s\n", req.Dest)
+	logger.LogDebug("Writing audio to: %s", req.Dest)
 
 	// Ensure the directory exists
 	dir := req.Dest[:strings.LastIndex(req.Dest, "/")]
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		logger.VPrintf("Error creating directory: %v\n", err)
+		logger.LogError("Error creating directory: %v", err)
 		return false, err
 	}
 
 	// Write the audio data to file
 	if err := os.WriteFile(req.Dest, respBody, 0644); err != nil {
-		logger.VPrintf("Error writing file: %v\n", err)
+		logger.LogError("Error writing file: %v", err)
 		return false, err
 	}
 
-	logger.VPrintf("Successfully wrote %d bytes to %s\n", len(respBody), req.Dest)
+	logger.LogDebug("Successfully wrote %d bytes to %s", len(respBody), req.Dest)
 	return true, nil
 }
 
 // isAudioFileValid checks if the audio file exists and is valid
 func isAudioFileValid(file string) (bool, error) {
 	if _, err := os.Stat(file); err != nil {
-		logger.VPrintf("Warning: Audio file does not exist: %s\n", file)
-		logger.VPrintf("Error: %v\n", err)
+		logger.LogWarn("Warning: Audio file does not exist: %s", file)
+		logger.LogError("Error: %v", err)
 		return false, err
 	}
 
 	// Check if file has minimum size (not empty/corrupted)
 	if fileInfo, err := os.Stat(file); err == nil {
 		if fileInfo.Size() < 1000 {
-			logger.VPrintf("Warning: Audio file appears to be corrupted or empty (size: %d bytes)\n", fileInfo.Size())
+			logger.LogWarn("Warning: Audio file appears to be corrupted or empty (size: %d bytes)", fileInfo.Size())
 			return false, fmt.Errorf("file too small: %d bytes", fileInfo.Size())
 		}
 	}

@@ -44,7 +44,7 @@ func NewHTTPRequestWithRetry(method, url string, body io.Reader, headers map[str
 		// Replace all occurrences in the curlCmdForLog
 		curlCmdForLog = regex.ReplaceAllString(curlCmdForLog, replace)
 	}
-	logger.VPrintf("Curl: %s", curlCmdForLog)
+	logger.LogDebug("Curl: %s", curlCmdForLog)
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		req, err = http.NewRequest(method, url, body)
@@ -53,12 +53,12 @@ func NewHTTPRequestWithRetry(method, url string, body io.Reader, headers map[str
 			for k, v := range headers {
 				req.Header.Set(k, v)
 			}
-			logger.VPrintf("HTTP request for %s OK. at %d th try. ", url, attempt)
+			logger.LogDebug("HTTP request for %s OK. at %d th try. ", url, attempt)
 			return req, nil
 		}
 		if attempt < maxAttempts {
 			// Exponential backoff: delay doubles each time
-			logger.VPrintf("HTTP request for %s failed. waiting for the %d th try. ", url, attempt)
+			logger.LogWarn("HTTP request for %s failed. waiting for the %d th try. ", url, attempt)
 			time.Sleep(delay)
 			delay *= 2
 		}
@@ -69,37 +69,37 @@ func NewHTTPRequestWithRetry(method, url string, body io.Reader, headers map[str
 // HTTPRequest logs the request details, sends the HTTP request, and returns the response and error.
 // Sensitive headers (like Ocp-Apim-Subscription-Key) are hidden in logs.
 func HTTPRequest(client *http.Client, httpReq *http.Request) (*http.Response, error) {
-	logger.VPrintf("Request URL: %s\n", httpReq.URL.String())
-	logger.VPrintf("Request Method: %s\n", httpReq.Method)
-	logger.VPrintf("Request Headers:\n")
+	logger.LogDebug("Request URL: %s", httpReq.URL.String())
+	logger.LogDebug("Request Method: %s", httpReq.Method)
+	logger.LogDebug("Request Headers:")
 	for key, values := range httpReq.Header {
 		for _, value := range values {
 			if IsHiddenKey(key) {
-				logger.VPrintf("  %s: [HIDDEN]\n", key)
+				logger.LogDebug("  %s: [HIDDEN]", key)
 			} else {
-				logger.VPrintf("  %s: %s\n", key, value)
+				logger.LogDebug("  %s: %s", key, value)
 			}
 		}
 	}
 
-	logger.VPrintf("Sending request...\n")
+	logger.LogDebug("Sending request...")
 	var resp *http.Response
 	var err error
 	initialInterval := time.Second
 	err = RetryWithBackoff(func() error {
 		resp, err = client.Do(httpReq)
 		if err != nil || resp == nil {
-			logger.VPrintf("HTTP request failed: %v\n", err)
+			logger.LogWarn("HTTP request failed: %v", err)
 			return err
 		}
 		return nil
 	}, MAX_RETRY, initialInterval)
 	if err != nil {
-		logger.VPrintf("HTTP request failed after %d attempts: %v\n", MAX_RETRY, err)
+		logger.LogError("HTTP request failed after %d attempts: %v", MAX_RETRY, err)
 		return nil, err
 	}
 	if resp == nil {
-		logger.VPrintf("Error: Response is nil\n")
+		logger.LogError("Error: Response is nil")
 		return nil, fmt.Errorf("response is nil")
 	}
 	return resp, nil
