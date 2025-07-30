@@ -35,16 +35,6 @@ func TestMain(t *testing.T) {
 		}
 	})
 
-	// Test case: only -v flag
-	t.Run("only verbose flag", func(t *testing.T) {
-		config.ResetArgs()
-		cmd := exec.Command(buildPath, "-v")
-		err := cmd.Run()
-		if err != nil {
-			t.Errorf("Expected no error when only -v is provided, but got: %v", err)
-		}
-	})
-
 	// Test case: flags requiring content
 	t.Run("flags requiring content", func(t *testing.T) {
 		config.ResetArgs()

@@ -21,45 +21,45 @@ func UploadToR2(req tts.TTSRequest) (bool, error) {
 	filename := req.Dest
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
-		logger.VPrintf("File does not exist: %s\n", filename)
+		logger.LogWarn("File does not exist: %s", filename)
 		return false, err
 	}
 
 	if fileInfo.Size() == 0 {
-		logger.VPrintf("File is empty: %s\n", filename)
+		logger.LogWarn("File is empty: %s", filename)
 		return false, fmt.Errorf("file is empty")
 	}
 
 	// Check if rclone is available
 	if _, err := exec.LookPath("rclone"); err != nil {
-		logger.VPrintf("rclone not found in PATH: %v\n", err)
+		logger.LogError("rclone not found in PATH: %v", err)
 		return false, err
 	}
 
 	// Upload file to R2
-	logger.VPrintf("Uploading %s to R2...\n", filename)
+	logger.LogDebug("Uploading %s to R2...", filename)
 	cmd := exec.Command("rclone", "copy", filename, "r2:tts/")
 
 	uploadErr := utils.RetryWithBackoff(func() error {
 		err := cmd.Run()
 		if err != nil {
-			logger.VPrintf("Upload failed: %v\n", err)
+			logger.LogWarn("Upload failed: %v", err)
 		}
 		return err
 	}, utils.MAX_RETRY, 1*time.Second)
 	if uploadErr != nil {
-		logger.VPrintf("Upload failed after retries: %v\n", uploadErr)
+		logger.LogError("Upload failed after retries: %v", uploadErr)
 		return false, uploadErr
 	}
 
-	logger.VPrintf("Successfully uploaded %s to R2\n", filename)
+	logger.LogDebug("Successfully uploaded %s to R2", filename)
 
 	//	copy mp3 url to clipboard
 	url := fmt.Sprintf("%s/%s.mp3", R2_URL_PREFIX, req.Md5)
 	cmd = exec.Command("pbcopy")
 	cmd.Stdin = strings.NewReader(url)
 	if err := cmd.Run(); err != nil {
-		logger.VPrintf("copy url to clipboard error: %v\n", err)
+		logger.LogWarn("copy url to clipboard error: %v", err)
 		return false, err
 	}
 

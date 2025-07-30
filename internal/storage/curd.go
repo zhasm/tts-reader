@@ -29,14 +29,14 @@ func AppendRecord(req tts.TTSRequest) (bool, error) {
 		}
 	}
 	if lang == "" {
-		logger.VPrintf("Unsupported language: %s\n", req.Lang)
+		logger.LogError("Unsupported language: %s", req.Lang)
 		return false, fmt.Errorf("unsupported language: %s", req.Lang)
 	}
 
 	// Get file size in KB
 	fileInfo, err := os.Stat(req.Dest)
 	if err != nil {
-		logger.VPrintf("Error getting file info: %v\n", err)
+		logger.LogError("Error getting file info: %v", err)
 		return false, err
 	}
 	fileSizeKb := fmt.Sprintf("%d", fileInfo.Size()/1024)
@@ -49,7 +49,7 @@ func AppendRecord(req tts.TTSRequest) (bool, error) {
 	}
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
-		logger.VPrintf("Error marshaling JSON: %v\n", err)
+		logger.LogError("Error marshaling JSON: %v", err)
 		return false, err
 	}
 	body := bytes.NewBuffer(jsonBytes)
@@ -62,7 +62,7 @@ func AppendRecord(req tts.TTSRequest) (bool, error) {
 	}
 	httpReq, err := utils.NewHTTPRequestWithRetry("POST", CRUD_HOST, body, httpHeaders)
 	if err != nil {
-		logger.VPrintf("Error creating HTTP request: %v\n", err)
+		logger.LogError("Error creating HTTP request: %v", err)
 		return false, err
 	}
 
@@ -73,7 +73,7 @@ func AppendRecord(req tts.TTSRequest) (bool, error) {
 	// Fetch Request
 	resp, err := utils.HTTPRequest(client, httpReq)
 	if err != nil {
-		logger.VPrintln("Failure : ", err)
+		logger.LogError("Failure : ", err)
 		return false, err
 	}
 	defer resp.Body.Close()
@@ -82,9 +82,9 @@ func AppendRecord(req tts.TTSRequest) (bool, error) {
 	respBody, _ := io.ReadAll(resp.Body)
 
 	// Display Results
-	logger.VPrintln("response Status : ", resp.Status)
-	logger.VPrintln("response Headers : ", resp.Header)
-	logger.VPrintln("response Body : ", string(respBody))
+	logger.LogDebug("response Status : ", resp.Status)
+	logger.LogDebug("response Headers : ", resp.Header)
+	logger.LogDebug("response Body : ", string(respBody))
 	if resp.StatusCode != 200 {
 		fmt.Println("Appending record Error!")
 		os.Exit(1)
