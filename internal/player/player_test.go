@@ -20,7 +20,7 @@ func TestIsAudioFileValid(t *testing.T) {
 	}
 	tmpfile.Close()
 
-	valid, err := isAudioFileValid(tmpfile.Name())
+	valid, err := tts.IsAudioFileValid(tmpfile.Name())
 	if !valid || err != nil {
 		t.Errorf("Expected valid audio file, got valid=%v, err=%v", valid, err)
 	}
@@ -32,13 +32,13 @@ func TestIsAudioFileValid(t *testing.T) {
 		t.Fatalf("Failed to write to tmpfile2: %v", err)
 	}
 	tmpfile2.Close()
-	valid, err = isAudioFileValid(tmpfile2.Name())
+	valid, err = tts.IsAudioFileValid(tmpfile2.Name())
 	if valid || err == nil {
 		t.Errorf("Expected invalid audio file, got valid=%v, err=%v", valid, err)
 	}
 
 	// Test with non-existent file
-	valid, err = isAudioFileValid("nonexistent.mp3")
+	valid, err = tts.IsAudioFileValid("nonexistent.mp3")
 	if valid || err == nil {
 		t.Errorf("Expected error for non-existent file, got valid=%v, err=%v", valid, err)
 	}
