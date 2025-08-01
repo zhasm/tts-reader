@@ -19,7 +19,8 @@ import (
 )
 
 const (
-	INDENT_DEFAULT = 23
+	INDENT_DEFAULT             = 23
+	MAX_CONTENT_LENGTH_TO_SHOW = 42
 )
 
 func run() error {
@@ -34,8 +35,34 @@ func run() error {
 		return fmt.Errorf("language not found: %s", config.Language)
 	}
 
-	req := createTTSRequest(lang)
-	content := logContentPreview(req)
+	req := tts.NewTTSRequest(
+		config.Content,
+		lang.NameFUll,
+		lang.Reader,
+		config.Speed,
+	)
+	return processTTSRequest(req, lang)
+}
+
+// RunWithAPI processes a TTS request from the API and returns an error if any.
+func RunWithAPI(language string, speed float64, content string) error {
+	initLoggerAndConfig()
+	lang, found := config.GetLang(language)
+	if !found {
+		return fmt.Errorf("language not found: %s", language)
+	}
+	req := tts.NewTTSRequest(
+		content,
+		lang.NameFUll,
+		lang.Reader,
+		speed,
+	)
+	return processTTSRequest(req, lang)
+}
+
+// processTTSRequest handles the backend processing and logging for both CLI and API.
+func processTTSRequest(req tts.TTSRequest, lang config.Lang) error {
+	content := logContentPreview(lang, req)
 
 	if ok, err := config.ValidateLangRegex(config.Language, config.Content); err != nil {
 		return fmt.Errorf("language validation failed: %w", err)
@@ -64,22 +91,13 @@ func initLoggerAndConfig() {
 	config.Init()
 }
 
-func createTTSRequest(lang config.Lang) tts.TTSRequest {
-	return tts.NewTTSRequest(
-		config.Content,
-		lang.NameFUll,
-		lang.Reader,
-		config.Speed,
-	)
-}
-
-func logContentPreview(req tts.TTSRequest) string {
+func logContentPreview(lang config.Lang, req tts.TTSRequest) string {
 	content := req.Content
 	contentLen := len(content)
 	if contentLen > MAX_CONTENT_LENGTH_TO_SHOW {
 		content = content[:MAX_CONTENT_LENGTH_TO_SHOW] + "..."
 	}
-	return fmt.Sprintf("%s [%s][%d]", config.GetFlagByName(config.Language), content, contentLen)
+	return fmt.Sprintf("%s [%s][%d]", lang.Flag, content, contentLen)
 }
 
 func buildProcessingPipeline() []func(tts.TTSRequest) (bool, error) {

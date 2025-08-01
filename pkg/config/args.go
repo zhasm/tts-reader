@@ -22,6 +22,7 @@ var (
 	Version     bool
 	VersionInfo string
 	DryRun      bool
+	Port        int = 8080
 	OverWrite   bool
 	LogLevel    string = DEFAULT_LOG_LEVEL
 )
@@ -32,6 +33,7 @@ var flagMapping = map[string]string{
 	"s": "speed",
 	"h": "help",
 	"V": "version",
+	"p": "port",
 	"d": "dry-run",
 	"o": "over-write",
 	"L": "log-level",
@@ -129,9 +131,10 @@ func ParseArgs() error {
 		pflag.StringVarP(&LogLevel, "log-level", "L", DEFAULT_LOG_LEVEL, "log level: debug(d), info(i), warn(w), error(e)")
 		pflag.StringVarP(&Language, "language", "l", "fr", "language ("+GetAllLangShortNamesStr()+")")
 		pflag.Float64VarP(&Speed, "speed", "s", 0.8, "speed (float)")
-		pflag.BoolVarP(&Help, "help", "h", false, "print help")
-		pflag.BoolVarP(&Version, "version", "V", false, "show version info")
+		pflag.BoolVarP(&Help, "help", "h", false, "print help and exit")
+		pflag.BoolVarP(&Version, "version", "V", false, "show version info and exit")
 		pflag.BoolVarP(&DryRun, "dry-run", "d", false, "dry run mode (no changes will be made)")
+		pflag.IntVarP(&Port, "port", "p", 8080, "TCP port for server mode (1-65535). default: 8080")
 		pflag.BoolVarP(&OverWrite, "over-write", "o", false, "force re-download even if file exists")
 
 		pflag.Parse()
@@ -203,7 +206,15 @@ func ResetArgs() {
 	Version = false
 	VersionInfo = ""
 	DryRun = false
+	Port = 8080
 	OverWrite = false
 	parseOnce = sync.Once{}
 	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
+}
+
+func ValidatePort() error {
+	if Port < 1 || Port > 65535 {
+		return fmt.Errorf("invalid port: %d (must be 1-65535)", Port)
+	}
+	return nil
 }
