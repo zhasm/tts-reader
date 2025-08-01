@@ -28,12 +28,10 @@ func IsHiddenKey(key string) bool {
 	return contains(HIDDEN_KEYS, key)
 }
 
-// NewHTTPRequestWithRetry abstracts http.NewRequest with retry logic for request creation only.
-func NewHTTPRequestWithRetry(method, url string, body io.Reader, headers map[string]string) (*http.Request, error) {
+// NewHTTPRequest abstracts http.NewRequest with retry logic for request creation only.
+func NewHTTPRequest(method, url string, body io.Reader, headers map[string]string) (*http.Request, error) {
 	var req *http.Request
 	var err error
-	delay := 200 * time.Millisecond
-	maxAttempts := MAX_RETRY
 	curlCmd := buildCurlCommand(method, url, headers, body)
 	curlCmdForLog := curlCmd
 	for _, key := range HIDDEN_KEYS {
@@ -46,24 +44,17 @@ func NewHTTPRequestWithRetry(method, url string, body io.Reader, headers map[str
 	}
 	logger.LogDebug("Curl: %s", curlCmdForLog)
 
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
-		req, err = http.NewRequest(method, url, body)
-		if err == nil {
-			// Set headers if provided
-			for k, v := range headers {
-				req.Header.Set(k, v)
-			}
-			logger.LogDebug("HTTP request for %s OK. at %d th try. ", url, attempt)
-			return req, nil
-		}
-		if attempt < maxAttempts {
-			// Exponential backoff: delay doubles each time
-			logger.LogWarn("HTTP request for %s failed. waiting for the %d th try. ", url, attempt)
-			time.Sleep(delay)
-			delay *= 2
-		}
+	// Create the HTTP request once (no retry)
+	req, err = http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
 	}
-	return nil, err
+	// Set headers if provided
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	logger.LogDebug("HTTP request for %s OK.", url)
+	return req, nil
 }
 
 // HTTPRequest logs the request details, sends the HTTP request, and returns the response and error.
@@ -86,10 +77,10 @@ func HTTPRequest(client *http.Client, httpReq *http.Request) (*http.Response, er
 	var resp *http.Response
 	var err error
 	initialInterval := time.Second
-	err = RetryWithBackoff(func() error {
+	err = RetryWithBackoff(func(retryIdx int) error {
 		resp, err = client.Do(httpReq)
 		if err != nil || resp == nil {
-			logger.LogWarn("HTTP request failed: %v", err)
+			logger.LogWarn("HTTP request failed %d: %v", retryIdx, err)
 			return err
 		}
 		return nil

@@ -60,7 +60,7 @@ func AppendRecord(req tts.TTSRequest) (bool, error) {
 	httpHeaders := map[string]string{
 		"Content-Type": "application/json",
 	}
-	httpReq, err := utils.NewHTTPRequestWithRetry("POST", CRUD_HOST, body, httpHeaders)
+	httpReq, err := utils.NewHTTPRequest("POST", CRUD_HOST, body, httpHeaders)
 	if err != nil {
 		logger.LogError("Error creating HTTP request: %v", err)
 		return false, err

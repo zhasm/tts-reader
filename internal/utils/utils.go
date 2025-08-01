@@ -24,11 +24,13 @@ func ToHomeRelativePath(absPath string) string {
 }
 
 // RetryWithBackoff retries the provided function with exponential backoff.
-func RetryWithBackoff(fn func() error, maxRetries int, initialInterval time.Duration) error {
+// The callback receives the current retry index (starting from 1).
+func RetryWithBackoff(fn func(retryIdx int) error, maxRetries int, initialInterval time.Duration) error {
 	interval := initialInterval
 	var lastErr error
 	for i := range maxRetries {
-		err := fn()
+		retryIdx := i + 1
+		err := fn(retryIdx)
 		if err == nil {
 			return nil
 		}

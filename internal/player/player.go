@@ -1,35 +1,16 @@
 package player
 
 import (
-	"fmt"
-	"os"
 	"os/exec"
 
 	"github.com/zhasm/tts-reader/internal/tts"
 	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
-func isAudioFileValid(file string) (bool, error) {
-	if _, err := os.Stat(file); err != nil {
-		logger.LogError("Warning: Audio file does not exist: %s", file)
-		logger.LogError("Error: %v", err)
-		return false, err
-	}
-
-	// Check if file has minimum size (not empty/corrupted)
-	if fileInfo, err := os.Stat(file); err == nil {
-		if fileInfo.Size() < 1000 {
-			logger.LogWarn("Warning: Audio file appears to be corrupted or empty (size: %d bytes)", fileInfo.Size())
-			return false, fmt.Errorf("file too small: %d bytes", fileInfo.Size())
-		}
-	}
-	return true, nil
-}
-
 func PlayAudio(req tts.TTSRequest) (bool, error) {
 	file := req.Dest
 	// Check if file exists and is valid
-	if valid, err := isAudioFileValid(file); !valid {
+	if valid, err := tts.IsAudioFileValid(file); !valid {
 		logger.LogError("Audio file validation failed: %v", err)
 		return false, err
 	}

@@ -40,10 +40,10 @@ func UploadToR2(req tts.TTSRequest) (bool, error) {
 	logger.LogDebug("Uploading %s to R2...", filename)
 	cmd := exec.Command("rclone", "copy", filename, "r2:tts/")
 
-	uploadErr := utils.RetryWithBackoff(func() error {
+	uploadErr := utils.RetryWithBackoff(func(retryIdx int) error {
 		err := cmd.Run()
 		if err != nil {
-			logger.LogWarn("Upload failed: %v", err)
+			logger.LogWarn("Upload failed [%d]: %v", retryIdx, err)
 		}
 		return err
 	}, utils.MAX_RETRY, 1*time.Second)

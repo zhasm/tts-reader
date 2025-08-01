@@ -60,7 +60,7 @@ func ReqTTS(req TTSRequest) (bool, error) {
 
 	// Check if destination file already exists and is valid
 	if !config.OverWrite {
-		if valid, _ := isAudioFileValid(req.Dest); valid {
+		if valid, _ := IsAudioFileValid(req.Dest); valid {
 			// Get file info for logging
 			if fileInfo, err := os.Stat(req.Dest); err == nil {
 				logger.LogDebug("File already exists: %s (size: %d bytes)", req.Dest, fileInfo.Size())
@@ -99,7 +99,7 @@ func ReqTTS(req TTSRequest) (bool, error) {
 		"Ocp-Apim-Subscription-Key": config.TTS_API_KEY,
 		"User-Agent":                USER_AGENT,
 	}
-	httpReq, err := utils.NewHTTPRequestWithRetry("POST", HTTP_REQEUEST_API, body, httpHeaders)
+	httpReq, err := utils.NewHTTPRequest("POST", HTTP_REQEUEST_API, body, httpHeaders)
 	if err != nil {
 		logger.LogError("Error creating request: %v", err)
 		return false, err
@@ -179,11 +179,10 @@ func ReqTTS(req TTSRequest) (bool, error) {
 	return true, nil
 }
 
-// isAudioFileValid checks if the audio file exists and is valid
-func isAudioFileValid(file string) (bool, error) {
+// IsAudioFileValid checks if the audio file exists and is valid
+func IsAudioFileValid(file string) (bool, error) {
 	if _, err := os.Stat(file); err != nil {
-		logger.LogWarn("Warning: Audio file does not exist: %s", file)
-		logger.LogError("Error: %v", err)
+		logger.LogDebug("Warning: Audio file does not exist: %s; err: %v", file, err)
 		return false, err
 	}
 
