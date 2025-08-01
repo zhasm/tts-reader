@@ -40,7 +40,7 @@ func (h *CustomHandler) Enabled(_ context.Context, level slog.Level) bool {
 
 func (h *CustomHandler) Handle(_ context.Context, record slog.Record) error {
 	// Format time as 20250730-0815.xxx
-	timeStr := record.Time.Format("20060102-1504.000")
+	timeStr := record.Time.Format("20060102-150405.000")
 
 	// Get level string
 	levelStr := record.Level.String()
