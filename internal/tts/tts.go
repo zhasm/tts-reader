@@ -99,7 +99,7 @@ func ReqTTS(req TTSRequest) (bool, error) {
 		"Ocp-Apim-Subscription-Key": config.TTS_API_KEY,
 		"User-Agent":                USER_AGENT,
 	}
-	httpReq, err := utils.NewHTTPRequestWithRetry("POST", HTTP_REQEUEST_API, body, httpHeaders)
+	httpReq, err := utils.NewHTTPRequest("POST", HTTP_REQEUEST_API, body, httpHeaders)
 	if err != nil {
 		logger.LogError("Error creating request: %v", err)
 		return false, err
