@@ -23,8 +23,8 @@ const (
 )
 
 func run() error {
+	startAll := time.Now()
 	initLoggerAndConfig()
-
 	if err := config.ValidateAndHandleArgs(); err != nil {
 		return fmt.Errorf("argument validation failed: %w", err)
 	}
@@ -46,7 +46,11 @@ func run() error {
 	logger.LogInfo("%s", MsgWithIcon(content, "⏰"))
 	logger.LogInfo("📂: %s", utils.ToHomeRelativePath(req.Dest))
 	logger.LogInfo("⌛️ TTS request in progress...")
-	defer logger.LogInfo("%s\n", MsgWithIcon(content, "✅"))
+
+	defer func() {
+		logger.LogInfo("%s", MsgWithIcon(content, "✅"))
+		logger.LogInfo("Total time taken: %.3f(s)\n", time.Since(startAll).Seconds())
+	}()
 
 	start := time.Now()
 	if ok, err := tts.ReqTTS(req); err != nil || !ok {
