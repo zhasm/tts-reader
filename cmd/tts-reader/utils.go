@@ -36,10 +36,13 @@ func run() error {
 
 	req := createTTSRequest(lang)
 	content := logContentPreview(req)
+	success := true
 
 	if ok, err := config.ValidateLangRegex(config.Language, config.Content); err != nil {
+		success = false
 		return fmt.Errorf("language validation failed: %w", err)
 	} else if !ok {
+		success = false
 		return fmt.Errorf("language validation failed: %s", config.Language)
 	}
 
@@ -48,19 +51,26 @@ func run() error {
 	logger.LogInfo("⌛️ TTS request in progress...")
 
 	defer func() {
-		logger.LogInfo("%s", MsgWithIcon(content, "✅"))
+		symbol := map[bool]string{true: "✅", false: "❌"}[success]
+		logger.LogInfo("%s", MsgWithIcon(content, symbol))
 		logger.LogInfo("Total time taken: %.3f(s)\n", time.Since(startAll).Seconds())
 	}()
 
 	start := time.Now()
 	if ok, err := tts.ReqTTS(req); err != nil || !ok {
+		success = false
 		return fmt.Errorf("TTS request failed: %w", err)
 	}
 	duration := time.Since(start).Seconds()
 	logger.LogInfo("✅ TTS request completed, took %.3f(s)", duration)
 
 	funcs := buildProcessingPipeline()
-	return runFunctionsConcurrently(funcs, req)
+	if err := runFunctionsConcurrently(funcs, req); err != nil {
+		success = false
+		return err
+	}
+
+	return nil
 }
 
 func initLoggerAndConfig() {
