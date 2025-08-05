@@ -164,7 +164,7 @@ func ParseArgs() error {
 		// Positional argument (content)
 		remaining := pflag.Args()
 		if len(remaining) > 0 {
-			Content = remaining[0]
+			Content = strings.TrimSpace(remaining[0])
 		}
 	})
 	return parseErr
