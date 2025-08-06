@@ -2,18 +2,47 @@ package config
 
 import (
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
-const (
-	TTS_SUB_PATH = "/icloud/0-tmp/tts"
+var (
+	TTS_PATH = GetStringFromEnvOrDefault("TTS_PATH", "~/icloud/0-tmp/tts")
 )
 
 var TTS_API_KEY string
-var TTS_PATH = os.Getenv("HOME") + TTS_SUB_PATH
 var R2_DB_TOKEN string
+
+func resolveDefaultValue(defaultValue string) string {
+	if len(defaultValue) >= 2 && defaultValue[:2] == "~/" {
+		if home, err := os.UserHomeDir(); err == nil {
+			return filepath.Join(home, defaultValue[2:])
+		}
+	}
+	return defaultValue
+}
+
+func GetIntFromEnvOrDefault(envVar, defaultValue string) int {
+	if value := os.Getenv(envVar); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
+	}
+	if intValue, err := strconv.Atoi(resolveDefaultValue(defaultValue)); err == nil {
+		return intValue
+	}
+	return 0
+}
+
+func GetStringFromEnvOrDefault(envVar, defaultValue string) string {
+	if value := os.Getenv(envVar); value != "" {
+		return value
+	}
+	return resolveDefaultValue(defaultValue)
+}
 
 // isTest returns true if the program is running under go test
 func isTest() bool {
