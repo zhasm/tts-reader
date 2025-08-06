@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	INDENT_DEFAULT = config.GetFromEnvOrDefault("INDENT_DEFAULT", "23")
+	INDENT_DEFAULT = config.GetIntFromEnvOrDefault("INDENT_DEFAULT", "23")
 )
 
 func run() error {

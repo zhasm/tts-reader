@@ -17,7 +17,7 @@ var (
 )
 
 var (
-	MAX_RETRY = config.GetFromEnvOrDefault("MAX_RETRY", "10")
+	MAX_RETRY = config.GetIntFromEnvOrDefault("MAX_RETRY", "10")
 )
 
 // contains checks if a string is in a slice of strings

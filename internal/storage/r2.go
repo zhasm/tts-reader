@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	R2_URL_PREFIX = config.GetFromEnvOrDefault("R2_URL_PREFIX", "https://pub-c6b11003307646e98afc7540d5f09c41.r2.dev")
+	R2_URL_PREFIX = config.GetStringFromEnvOrDefault("R2_URL_PREFIX", "https://pub-c6b11003307646e98afc7540d5f09c41.r2.dev")
 )
 
 func UploadToR2(req tts.TTSRequest) (bool, error) {

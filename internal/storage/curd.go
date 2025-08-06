@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	CRUD_HOST = config.GetFromEnvOrDefault("CRUD_HOST", "https://tts-server.rex-zhasm6886.workers.dev/api/item")
+	CRUD_HOST = config.GetStringFromEnvOrDefault("CRUD_HOST", "https://tts-server.rex-zhasm6886.workers.dev/api/item")
 )
 
 func AppendRecord(req tts.TTSRequest) (bool, error) {

@@ -25,11 +25,11 @@ type TTSRequest struct {
 }
 
 var (
-	USER_AGENT                 = config.GetFromEnvOrDefault("USER_AGENT", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36")
-	X_MICROSOFT_OUTPUTFORMAT   = config.GetFromEnvOrDefault("X_MICROSOFT_OUTPUTFORMAT", "riff-24khz-16bit-mono-pcm")
-	HTTP_REQEUEST_HOST         = config.GetFromEnvOrDefault("HTTP_REQEUEST_HOST", "westus.tts.speech.microsoft.com")
-	HTTP_REQEUEST_CONTENT_TYPE = config.GetFromEnvOrDefault("HTTP_REQEUEST_CONTENT_TYPE", "application/ssml+xml")
-	HTTP_REQEUEST_API          = config.GetFromEnvOrDefault("HTTP_REQEUEST_API", "https://eastasia.tts.speech.microsoft.com/cognitiveservices/v1")
+	USER_AGENT                 = config.GetStringFromEnvOrDefault("USER_AGENT", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36")
+	X_MICROSOFT_OUTPUTFORMAT   = config.GetStringFromEnvOrDefault("X_MICROSOFT_OUTPUTFORMAT", "riff-24khz-16bit-mono-pcm")
+	HTTP_REQEUEST_HOST         = config.GetStringFromEnvOrDefault("HTTP_REQEUEST_HOST", "westus.tts.speech.microsoft.com")
+	HTTP_REQEUEST_CONTENT_TYPE = config.GetStringFromEnvOrDefault("HTTP_REQEUEST_CONTENT_TYPE", "application/ssml+xml")
+	HTTP_REQEUEST_API          = config.GetStringFromEnvOrDefault("HTTP_REQEUEST_API", "https://eastasia.tts.speech.microsoft.com/cognitiveservices/v1")
 )
 
 func NewTTSRequest(content, lang, reader string, speed float64) TTSRequest {

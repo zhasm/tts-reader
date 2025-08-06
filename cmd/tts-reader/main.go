@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	MAX_CONTENT_LENGTH_TO_SHOW = config.GetFromEnvOrDefault("MAX_CONTENT_LENGTH_TO_SHOW", "42")
+	MAX_CONTENT_LENGTH_TO_SHOW = config.GetIntFromEnvOrDefault("MAX_CONTENT_LENGTH_TO_SHOW", "42")
 )
 
 func main() {
