@@ -18,8 +18,8 @@ import (
 	"golang.org/x/term"
 )
 
-const (
-	INDENT_DEFAULT = 23
+var (
+	INDENT_DEFAULT = config.GetFromEnvOrDefault("INDENT_DEFAULT", "23")
 )
 
 func run() error {

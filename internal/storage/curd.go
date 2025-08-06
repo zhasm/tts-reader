@@ -14,8 +14,8 @@ import (
 	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
-const (
-	CRUD_HOST = "https://tts-server.rex-zhasm6886.workers.dev/api/item"
+var (
+	CRUD_HOST = config.GetFromEnvOrDefault("CRUD_HOST", "https://tts-server.rex-zhasm6886.workers.dev/api/item")
 )
 
 func AppendRecord(req tts.TTSRequest) (bool, error) {

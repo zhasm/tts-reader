@@ -8,6 +8,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/zhasm/tts-reader/pkg/config"
 	"github.com/zhasm/tts-reader/pkg/logger"
 )
 
@@ -15,8 +16,8 @@ var (
 	HIDDEN_KEYS = []string{"Ocp-Apim-Subscription-Key", "Authorization"}
 )
 
-const (
-	MAX_RETRY = 5
+var (
+	MAX_RETRY = config.GetFromEnvOrDefault("MAX_RETRY", "10")
 )
 
 // contains checks if a string is in a slice of strings
