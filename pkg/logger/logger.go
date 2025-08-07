@@ -30,6 +30,26 @@ type CustomHandler struct {
 	level slog.Level
 }
 
+// Red wraps the given text in red color codes and accepts any type.
+func Red(text any) string {
+	return levelColors[slog.LevelError] + fmt.Sprintf("%v", text) + colorReset
+}
+
+// Green wraps the given text in green color codes and accepts any type.
+func Green(text any) string {
+	return levelColors[slog.LevelInfo] + fmt.Sprintf("%v", text) + colorReset
+}
+
+// Yellow wraps the given text in yellow color codes and accepts any type.
+func Yellow(text any) string {
+	return levelColors[slog.LevelWarn] + fmt.Sprintf("%v", text) + colorReset
+}
+
+// Cyan wraps the given text in cyan color codes and accepts any type.
+func Cyan(text any) string {
+	return levelColors[slog.LevelDebug] + fmt.Sprintf("%v", text) + colorReset
+}
+
 func NewCustomHandler(w io.Writer, level slog.Level) *CustomHandler {
 	return &CustomHandler{w: w, level: level}
 }

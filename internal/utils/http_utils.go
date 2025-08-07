@@ -80,13 +80,13 @@ func HTTPRequest(client *http.Client, httpReq *http.Request) (*http.Response, er
 	err = RetryWithBackoff(func(retryIdx int) error {
 		resp, err = client.Do(httpReq)
 		if err != nil || resp == nil {
-			logger.LogWarn("HTTP request failed %d: %v", retryIdx, err)
+			logger.LogWarn("HTTP request %s %s: %v", logger.Red("failed"), logger.Red(retryIdx), err)
 			return err
 		}
 		return nil
 	}, MAX_RETRY, initialInterval)
 	if err != nil {
-		logger.LogError("HTTP request failed after %d attempts: %v", MAX_RETRY, err)
+		logger.LogError("HTTP request %s after %s attempts: %v", logger.Red("failed"), logger.Red(MAX_RETRY), err)
 		return nil, err
 	}
 	if resp == nil {
