@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -190,6 +191,15 @@ func ValidateAndHandleArgs() error {
 		PrintHelp(1)
 		return fmt.Errorf("content argument is missing")
 	}
+
+	// Check if Content is an HTTP/HTTPS URL (case-insensitive)
+	urlRegex := regexp.MustCompile(`(?i)https?://`)
+	if urlRegex.MatchString(Content) {
+		logger.LogError("Content is a URL: %s", Content)
+		msg := "content must not contain http/https"
+		return fmt.Errorf("%s", msg)
+	}
+
 	return nil
 }
 
