@@ -33,6 +33,7 @@ func Init() {
 			logger.LogError("Error parsing args:", err)
 			os.Exit(1)
 		}
+		LoadConfig()
 	}
 
 	TTS_API_KEY = os.Getenv("TTS_API_KEY")

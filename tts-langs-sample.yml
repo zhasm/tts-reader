@@ -1,0 +1,31 @@
+langs:
+    - name: fr
+      full_name: fr-FR
+      reader: fr-FR-DeniseNeural
+      gender: Male
+      flag: "\U0001F1EB\U0001F1F7"
+      regex: '[a-zA-ZÀ-ÿ]+'
+    - name: pl
+      full_name: pl-PL
+      reader: pl-PL-AgnieszkaNeural
+      gender: Female
+      flag: "\U0001F1F5\U0001F1F1"
+      regex: '[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+'
+    - name: jp
+      full_name: ja-JP
+      reader: ja-JP-MayuNeural
+      gender: Female
+      flag: "\U0001F1EF\U0001F1F5"
+      regex: '[ぁ-んァ-ン一-龯]+'
+    - name: en
+      full_name: en-US
+      reader: en-GB-HollieNeural
+      gender: Female
+      flag: "\U0001F1FA\U0001F1F8"
+      regex: '[a-zA-Z]+'
+    - name: hk
+      full_name: yue-CN
+      reader: zh-HK-HiuGaaiNeural
+      gender: Female
+      flag: "🇭🇰"
+
