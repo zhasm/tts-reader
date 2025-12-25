@@ -2,25 +2,35 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
+
+	"github.com/zhasm/tts-reader/pkg/logger"
+	"gopkg.in/yaml.v3"
 )
 
 var supportedLangs []string
 
 type Lang struct {
-	Name     string
-	NameFUll string
-	Reader   string
-	Gender   string
-	Flag     string
-	Regex    string
+	Name     string `yaml:"name"`
+	NameFUll string `yaml:"full_name"`
+	Reader   string `yaml:"reader"`
+	Gender   string `yaml:"gender"`
+	Flag     string `yaml:"flag"`
+	Regex    string `yaml:"regex"`
+}
+
+type LangConfig struct {
+	Langs []Lang `yaml:"langs"`
 }
 
 // Define the supported languages
-// TODO load from config file
-var Langs = []Lang{
+var Langs = DefaultLangs
+
+var DefaultLangs = []Lang{
 	{
 		Name:     "fr",
 		NameFUll: "fr-FR",
@@ -120,4 +130,75 @@ func initSupportedLangs() {
 	for i, l := range Langs {
 		supportedLangs[i] = l.Name
 	}
+}
+
+func LoadConfig() {
+	var configPath string
+
+	// 1. Check command line flag
+	if ConfigFile != "" {
+		configPath = ConfigFile
+	} else {
+		// 2. Check current directory
+		if _, err := os.Stat("./tts-langs.yml"); err == nil {
+			configPath = "./tts-langs.yml"
+		} else {
+			// 3. Check home directory
+			home, err := os.UserHomeDir()
+			if err == nil {
+				if _, err := os.Stat(filepath.Join(home, ".tts-langs.yml")); err == nil {
+					configPath = filepath.Join(home, ".tts-langs.yml")
+				} else if _, err := os.Stat(filepath.Join(home, ".config", "tts-langs.yml")); err == nil {
+					// 4. Check ~/.config/tts-langs.yml
+					configPath = filepath.Join(home, ".config", "tts-langs.yml")
+				}
+			}
+		}
+	}
+
+	if configPath == "" {
+		logger.LogWarn("No config file found, using default languages")
+		Langs = DefaultLangs
+	} else {
+		data, err := os.ReadFile(configPath)
+		if err != nil {
+			logger.LogWarn("Error reading config file %s: %v. Using defaults.", configPath, err)
+			Langs = DefaultLangs
+		} else {
+			var config LangConfig
+			if err := yaml.Unmarshal(data, &config); err != nil {
+				logger.LogWarn("Error parsing config file %s: %v. Using defaults.", configPath, err)
+				Langs = DefaultLangs
+			} else {
+				if len(config.Langs) == 0 {
+					logger.LogWarn("Config file %s has no languages. Using defaults.", configPath)
+					Langs = DefaultLangs
+				} else {
+					Langs = config.Langs
+					logger.LogInfo("Loaded configuration from %s", configPath)
+				}
+			}
+		}
+	}
+
+	initSupportedLangs()
+}
+
+func GenerateConfigFile() {
+	config := LangConfig{
+		Langs: DefaultLangs,
+	}
+
+	data, err := yaml.Marshal(&config)
+	if err != nil {
+		logger.LogError("Error marshaling default config: %v", err)
+		os.Exit(1)
+	}
+
+	filename := "tts-langs.yml"
+	if err := os.WriteFile(filename, data, 0644); err != nil {
+		logger.LogError("Error writing config file %s: %v", filename, err)
+		os.Exit(1)
+	}
+	logger.LogInfo("Generated default config file: %s", filename)
 }
